@@ -22,7 +22,7 @@ public class LobbyUI : MonoBehaviour
             LobbyEvents.OnLobbyReady += OnLobbyReady;
         }
 
-        //LobbyEvents.OnLobbyUpdated += OnLobbyUpdated;
+        LobbyEvents.OnLobbyUpdated += OnLobbyUpdated;
     }
 
     private void OnDisable()
@@ -31,7 +31,7 @@ public class LobbyUI : MonoBehaviour
         _startButton.onClick.RemoveAllListeners();
 
         LobbyEvents.OnLobbyReady -= OnLobbyReady;
-        //LobbyEvents.OnLobbyUpdated -= OnLobbyUpdated;
+        LobbyEvents.OnLobbyUpdated -= OnLobbyUpdated;
     }
 
 
@@ -63,12 +63,12 @@ public class LobbyUI : MonoBehaviour
         _startButton.gameObject.SetActive(true);
     }
 
-    /*
+    
     private void OnLobbyUpdated()
     {
-
+        
     }
-    */
+    
 
     private async void OnStartButtonClicked()
     {

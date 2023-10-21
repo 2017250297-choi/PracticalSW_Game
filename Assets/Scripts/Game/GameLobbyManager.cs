@@ -21,6 +21,7 @@ namespace Game // Game 폴더 내의 Init.cs, LobbyUI.cs 등의 스크립트 파일들을 Game
 
         private List<LobbyPlayerData> _lobbyPlayerDatas = new List<LobbyPlayerData>(); // 로비에 참여한 모든 플레이어의 데이터가 저장되는 곳
         private LobbyPlayerData _localLobbyPlayerData; // 로컬 플레이어 (게임하는 본인)의 데이터가 저장되는 곳
+        private LobbyData _lobbyData; // 릴레이 조인 코드 등이 저장됨. 맵 선택 기능 추가 시 맵 정보도 여기에 들어감
         private int _maxNumberOfPlayers = 2; // 수정 안 하고 싶으니까 private으로
         public bool IsHost => _localLobbyPlayerData.Id == LobbyManager.Instance.GetHostId();
 
@@ -66,7 +67,9 @@ namespace Game // Game 폴더 내의 Init.cs, LobbyUI.cs 등의 스크립트 파일들을 Game
             _localLobbyPlayerData = new LobbyPlayerData(); // LobbyPlayerData.cs에서 정의한 클래스
             _localLobbyPlayerData.Initialize(AuthenticationService.Instance.PlayerId, gamertag: "HostPlayer");
 
-            bool succeeded = await LobbyManager.Instance.CreateLobby(maxPlayers: _maxNumberOfPlayers, isPrivate: true, _localLobbyPlayerData.Serialize()); //Serialize를 적용해 Dictionary 형태로 넘겨주어야.
+            _lobbyData = new LobbyData();
+
+            bool succeeded = await LobbyManager.Instance.CreateLobby(maxPlayers: _maxNumberOfPlayers, isPrivate: true, _localLobbyPlayerData.Serialize(), _lobbyData.Serialize()); //Serialize를 적용해 Dictionary 형태로 넘겨주어야.
 
             return succeeded;
         }
@@ -101,7 +104,7 @@ namespace Game // Game 폴더 내의 Init.cs, LobbyUI.cs 등의 스크립트 파일들을 Game
 
         // LobbyManager가 업데이트된 플레이어 데이터를 전달해주면, _lobbyPlayerDatas 리스트를 repopulate하는 메소드
         // 새로운 플레이어 데이터가 업데이트될 때마다 이를 구독한 게임이 그 데이터를 받아오도록 하는 메소드임
-        private void OnLobbyUpdated(Lobby lobby)
+        private async void OnLobbyUpdated(Lobby lobby)
         {
             List<Dictionary<string, PlayerDataObject>> playerData = LobbyManager.Instance.GetPlayersData();
             // LobbyPlayerData.cs의 UpdateState의 인자가 <Dictionary<string, PlayerDataObject> 형식이었기 때문
@@ -130,6 +133,12 @@ namespace Game // Game 폴더 내의 Init.cs, LobbyUI.cs 등의 스크립트 파일들을 Game
                 _lobbyPlayerDatas.Add(lobbyPlayerData); // 받아온 업데이트된 플레이어 데이터를 리스트에 추가
             }
 
+
+            _lobbyData = new LobbyData(); // LobbyData 생성하고
+            _lobbyData.Initialize(lobby.Data); // LobbyData를 새로 가져온 lobby.Data 로 리셋한다. 로비에 변화가 있을 때마다 계속 리셋해줌.
+            // 그 다음 OnLobbyUpdated 대리자를 실행해 변화된 로비 정보가 실행해야 하는 이벤트를 실행함
+
+
             // 이제 데이터를 받아와 내 structure로 만들었으니, event에 데이터를 넘겨줄 수 있다
             Events.LobbyEvents.OnLobbyUpdated?.Invoke(); // Lobby로부터 리슨함 -> 로비에 플레이어 스폰 가능
             // Game 안에 Events가 있으므로 Events.LobbyEvents라 적음. LobbyEvents는 Game/Events/LobbyEvents.cs임 (GameFramework/Events/LobbyEvents.cs가 아님)
@@ -140,9 +149,17 @@ namespace Game // Game 폴더 내의 Init.cs, LobbyUI.cs 등의 스크립트 파일들을 Game
             if (numberOfPlayerReady == lobby.Players.Count) 
             {
                 Events.LobbyEvents.OnLobbyReady?.Invoke(); // 모든 플레이어가 레디 상태면, OnLobbyReady 실행
+                // 호스트 혼자 있을 때 실행되지 않도록 코드 수정 필요!!!
             }
 
-            
+            if (_lobbyData.RelayJoinCode != default) // lobbyData에서 릴레이 조인 코드가 initialize되어 비어있지 않다면,
+            {
+                await JoinRelayServer(_lobbyData.RelayJoinCode); // 이 조인 코드를 이용해 릴레이 서버에 참여시켜줌
+                SceneManager.LoadSceneAsync("MultiPlayScene"); // 그 다음 플레이 씬으로 이동
+                // 이 if문 안은 게스트 측을 위한 것. 
+                // 호스트가 START 버튼을 눌러 GameStart() 메소드를 실행하면, 릴레이 생성 -> 조인 코드 생성 -> 조인 코드 포함해 로비데이터 업뎃 을 해주는데,
+                // 게스트는 이 OnLobbyUpdate에서 새로 로비 데이터를 받아 업데이트하고, 조인 코드가 생기면 요 if문으로 인해 플레이 씬으로 이동한다. 게임 시작.
+            }
 
         }
 
@@ -157,9 +174,13 @@ namespace Game // Game 폴더 내의 Init.cs, LobbyUI.cs 등의 스크립트 파일들을 Game
             return await LobbyManager.Instance.UpdatePlayerData(_localLobbyPlayerData.Id, _localLobbyPlayerData.Serialize());
         }
 
-        public async Task StartGame() // 스타트 버튼을 누르면 게임을 시작하는 메소드
+        public async Task StartGame() // 스타트 버튼을 누르면 게임을 시작하는 메소드. 즉 호스트 측에서 실행됨
         {
-            string joinRelayCode = await RelayManager.Instance.CreateRelay(_maxNumberOfPlayers); // 릴레이 생성 시 최대 플레이어 수 넘겨주어야 함
+            string relayJoinCode = await RelayManager.Instance.CreateRelay(_maxNumberOfPlayers); // 릴레이 생성 시 최대 플레이어 수 넘겨주어야 함.
+            // CreateRelay는 실행 후 조인 코드를 리턴. 그것을 joinRelayCode에 저장
+
+            _lobbyData.RelayJoinCode = relayJoinCode; // lobbyData에 받아온 릴레이 조인 코드 저장해주고
+            await LobbyManager.Instance.UpdateLobbyData(_lobbyData.Serialize()); // 업뎃된 lobbyData 반영 -> 로비 업뎃
 
             // allocationID와 connectionData가 릴레이 매니저와 로비를 링크해주기 때문에
             // 내가 릴레이 매니저와 연결이 끊어졌더라도 동일한 로비로 돌아올 수 있다
@@ -171,6 +192,19 @@ namespace Game // Game 폴더 내의 Init.cs, LobbyUI.cs 등의 스크립트 파일들을 Game
 
             SceneManager.LoadSceneAsync("MultiPlayScene");
 
+        }
+
+
+        private async Task<bool> JoinRelayServer(string relayJoinCode)
+        {
+            await RelayManager.Instance.JoinRelay(relayJoinCode);
+
+            // StartGame의 코드와 동일. connection data를 이용해 플레이어 데이터를 업데이트.
+            string allocationId = RelayManager.Instance.GetAllocationId();
+            string connectionData = RelayManager.Instance.GetConnectionData();
+            await LobbyManager.Instance.UpdatePlayerData(_localLobbyPlayerData.Id, _localLobbyPlayerData.Serialize(), allocationId, connectionData);
+
+            return true;
         }
 
     }

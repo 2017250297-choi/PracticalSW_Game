@@ -8,6 +8,8 @@ using Unity.Services.Lobbies.Models;
 using UnityEditor;
 //using Game.Events;
 using GameFramework.Events; // LobbyEvents.OnLobbyUpdated가 여기에 있음 (Game.Events에 있는 것과 다름)
+using System.Runtime.CompilerServices;
+using GameFramework.Core.Data;
 //using Mono.Cecil.Cil;
 
 namespace GameFramework.Core.GameFramework.Manager
@@ -28,7 +30,7 @@ namespace GameFramework.Core.GameFramework.Manager
 
 
         // 로비가 잘 만들어졌는지 판단하기 위해 bool 사용
-        public async Task<bool> CreateLobby(int maxPlayers, bool isPrivate, Dictionary<string, string> data)
+        public async Task<bool> CreateLobby(int maxPlayers, bool isPrivate, Dictionary<string, string> data, Dictionary<string, string> lobbyData)
         {
             Dictionary<string, PlayerDataObject> playerData = SerializePlayerData(data);
 
@@ -37,6 +39,7 @@ namespace GameFramework.Core.GameFramework.Manager
 
             CreateLobbyOptions options = new CreateLobbyOptions()
             {
+                Data = SerializeLobbyData(lobbyData),
                 IsPrivate = isPrivate,
                 Player = player
             };
@@ -89,7 +92,7 @@ namespace GameFramework.Core.GameFramework.Manager
             }
         }
 
-        // CreateLobby 함수에서 입력으로 들어온 data를 <key, PlayerDataObject> 형식으로 재구성해 리턴해주는 함수
+        // CreateLobby 함수에서 입력으로 들어온 player data를 <key, PlayerDataObject> 형식으로 재구성해 리턴해주는 함수
         private Dictionary<string, PlayerDataObject> SerializePlayerData(Dictionary<string, string> data)
         {
             Dictionary<string, PlayerDataObject> playerData = new Dictionary<string, PlayerDataObject>();
@@ -102,6 +105,21 @@ namespace GameFramework.Core.GameFramework.Manager
             }
 
             return playerData;
+        }
+
+        // 이건 lobby data를 재구성해 리턴해주는 함수
+        private Dictionary<string, DataObject> SerializeLobbyData(Dictionary<string, string> data)
+        {
+            Dictionary<string, DataObject> lobbyData = new Dictionary<string, DataObject>();
+            foreach (var (key, value) in data)
+            {
+                lobbyData.Add(key, new DataObject(
+                    visibility: DataObject.VisibilityOptions.Member, // 로비의 멤버들에게만 보여야 함
+                                                                           // VisibilityOptions에는 public, memeber, private 등이 있음
+                    value: value));
+            }
+
+            return lobbyData;
         }
 
 
@@ -147,6 +165,8 @@ namespace GameFramework.Core.GameFramework.Manager
             return data;
         }
 
+        
+        // 플레이어 데이터를 업데이트하는 메소드
         public async Task<bool> UpdatePlayerData(string playerId, Dictionary<string, string> data, string allocationId = default, string connectionData = default) 
         {
             // data 안에 playerId도 있긴 함. 근데 없을 수도 있어서 이렇게 plyaerId 파라미터를 따로 받음
@@ -174,6 +194,32 @@ namespace GameFramework.Core.GameFramework.Manager
             LobbyEvents.OnLobbyUpdated(_lobby); // 받아온 Lobby로 로비를 업데이트
 
             return true;
+        }
+
+
+        // 로비 데이터를 업데이트하는 메소드
+        public async Task<bool> UpdateLobbyData(Dictionary<string, string> data)
+        {
+            Dictionary<string, DataObject> lobbyData = SerializeLobbyData(data);
+
+            UpdateLobbyOptions options = new UpdateLobbyOptions()
+            {
+                Data = lobbyData
+            };
+
+            try
+            {
+                _lobby = await LobbyService.Instance.UpdateLobbyAsync(_lobby.Id, options);
+                // 로비 아이디로 업데이트된 로비 정보를 동기화해서 Lobby로 리턴.
+            } catch(System.Exception)
+            {
+                return false;
+            }
+
+            LobbyEvents.OnLobbyUpdated(_lobby);  // 받아온 Lobby로 로비를 업데이트
+
+            return true;
+
         }
 
         public string GetHostId()
