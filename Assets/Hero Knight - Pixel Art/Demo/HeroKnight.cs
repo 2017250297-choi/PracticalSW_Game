@@ -2,22 +2,14 @@ using UnityEngine;
 using System.Collections;
 using Unity.Netcode;
 
-
-public class HeroKnight : NetworkBehaviour { // MonoBehaviour 말고 NetworkBehaviour 상속. IsLocal 등을 쓰기 위함
-
+public class HeroKnight : NetworkBehaviour
+{ // MonoBehaviour 말고 NetworkBehaviour 상속. IsLocal 등을 쓰기 위함
 
     [SerializeField] float m_speed = 4.0f;
     [SerializeField] float m_jumpForce = 7.5f;
     [SerializeField] float m_rollForce = 6.0f;
     [SerializeField] bool m_noBlood = false;
     [SerializeField] GameObject m_slideDust;
-
-    [SerializeField] GameObject my_healthObj;
-    [SerializeField] GameObject enemy;
-    public string attack_key;
-    public string dodge_key;
-    private HeroKnight enemyController;
-    private HealthSystem healthSys;
 
     private Animator m_animator;
     private Rigidbody2D m_body2d;
@@ -33,119 +25,8 @@ public class HeroKnight : NetworkBehaviour { // MonoBehaviour 말고 NetworkBeha
     private int m_currentAttack = 0;
     private float m_timeSinceAttack = 0.0f;
     private float m_delayToIdle = 0.0f;
-    private float m_rollDuration = 0.04f;
+    private float m_rollDuration = 8.0f / 14.0f;
     private float m_rollCurrentTime;
-    private float globalCoolDown = 0.0f;
-    private float originPos;
-    private float enemyPos;
-
-    enum State
-    {
-        attack,
-        dodge,
-        idle,
-        reload,
-    }
-    private State nowState = State.idle;
-    private bool isHitalbe = true;
-    private float attackDelay = 2.0f;
-    public float attackSpeed = 2.0f;
-    public float reloadSpeed = 2.0f;
-    public float dodgeSpeed = 2.0f;
-    public float atk = 10.0f;
-    public float def = 2.0f;
-
-
-    private bool hitted = false;
-    private bool actable = true;
-
-    public void GetHitted(float attackDmg)
-    {
-        healthSys = my_healthObj.GetComponent<HealthSystem>();
-        if (isHitalbe)
-        {
-            float dmg = CalculateDamage(attackDmg);
-            healthSys.TakeDamage(dmg);
-        }
-    }
-    float CalculateDamage(float attackDmg)
-    {
-        return (attackDmg - def);
-    }
-    IEnumerator Attack()
-    {
-        nowState = State.attack;
-        float temp = 0.0f;
-        globalCoolDown = 3.0f;
-        Debug.Log("attackStart");
-
-
-        Vector3 origin = transform.position;
-        Vector3 newPos = origin;
-        while (temp < attackDelay)
-        {
-            temp += Time.deltaTime * attackSpeed;
-            m_body2d.velocity = new Vector2((enemyPos - transform.position.x) * 1 * m_speed, m_body2d.velocity.y);
-            yield return null;
-        }
-        isHitalbe = false;
-        Debug.Log("attack!");
-        enemyController.GetHitted(atk);
-        m_currentAttack++;
-
-        if (m_currentAttack > 3)
-            m_currentAttack = 1;
-        // Call one of three attack animations "Attack1", "Attack2", "Attack3"
-        m_animator.SetTrigger("Attack" + m_currentAttack);
-        yield return new WaitForSeconds(0.06f);
-        isHitalbe = true;
-        temp = 0.0f;
-        nowState = State.reload;
-        while (globalCoolDown > temp)
-        {
-            temp += Time.deltaTime * reloadSpeed;
-            yield return null;
-        }
-        globalCoolDown = 0.0f;
-        Debug.Log("attackend");
-        nowState = State.idle;
-    }
-    IEnumerator Dodge()
-    {
-        nowState = State.dodge;
-        isHitalbe = false;
-        float invincibleTime = 0.04f;
-        globalCoolDown = 1.0f;
-        float temp = 0.0f;
-
-        m_rolling = true;
-        m_rollCurrentTime = 0.0f;
-        m_animator.SetTrigger("Roll");
-        Vector3 origin = transform.position;
-        Vector3 newPos = origin;
-        Debug.Log("dodge start");
-        while (temp < invincibleTime)
-        {
-            temp += Time.deltaTime;
-            if (m_rolling)
-            {
-                m_body2d.velocity = new Vector2(-16f * m_speed * m_facingDirection, m_body2d.velocity.y);
-            }
-            yield return null;
-        }
-        temp = 0.0f;
-        isHitalbe = true;
-        nowState = State.reload;
-        while (globalCoolDown > temp)
-        {
-
-            temp += Time.deltaTime * reloadSpeed;
-            yield return null;
-        }
-        Debug.Log("dodge end");
-        nowState = State.idle;
-        globalCoolDown = 0.0f;
-    }
 
 
     // Use this for initialization
@@ -158,32 +39,15 @@ public class HeroKnight : NetworkBehaviour { // MonoBehaviour 말고 NetworkBeha
         m_wallSensorR2 = transform.Find("WallSensor_R2").GetComponent<Sensor_HeroKnight>();
         m_wallSensorL1 = transform.Find("WallSensor_L1").GetComponent<Sensor_HeroKnight>();
         m_wallSensorL2 = transform.Find("WallSensor_L2").GetComponent<Sensor_HeroKnight>();
-        m_facingDirection = (GetComponent<SpriteRenderer>().flipX) ? -1 : 1;
-
-        enemyController = enemy.GetComponent<HeroKnight>();
-
-        originPos = transform.position.x;
-        enemyPos = enemy.transform.position.x;
-
     }
 
-    
+
 
     // Update is called once per frame
     void Update()
     {
         if (IsLocalPlayer)
         {
-            if (enemyPos - transform.position.x > 0)
-            {
-                m_facingDirection = 1;
-                GetComponent<SpriteRenderer>().flipX = false;
-            }
-            else
-            {
-                m_facingDirection = -1;
-                GetComponent<SpriteRenderer>().flipX = true;
-            }
             // Increase timer that controls attack combo
             m_timeSinceAttack += Time.deltaTime;
 
@@ -213,7 +77,17 @@ public class HeroKnight : NetworkBehaviour { // MonoBehaviour 말고 NetworkBeha
             float inputX = Input.GetAxis("Horizontal");
 
             // Swap direction of sprite depending on walk direction
+            if (inputX > 0)
+            {
+                GetComponent<SpriteRenderer>().flipX = false;
+                m_facingDirection = 1;
+            }
 
+            else if (inputX < 0)
+            {
+                GetComponent<SpriteRenderer>().flipX = true;
+                m_facingDirection = -1;
+            }
 
             // Move
             if (!m_rolling)
@@ -258,17 +132,6 @@ public class HeroKnight : NetworkBehaviour { // MonoBehaviour 말고 NetworkBeha
                 m_timeSinceAttack = 0.0f;
             }
 
-            else if (Input.GetKeyDown(attack_key) && nowState == State.idle)
-            {
-
-                StartCoroutine(Attack());
-
-            }
-            else if (Input.GetKeyDown(dodge_key) && nowState == State.idle)
-            {
-                StartCoroutine(Dodge());
-            }
-
             // Block
             else if (Input.GetMouseButtonDown(1) && !m_rolling)
             {
@@ -307,15 +170,13 @@ public class HeroKnight : NetworkBehaviour { // MonoBehaviour 말고 NetworkBeha
             }
 
             //Idle
-            if (nowState == State.reload || nowState == State.idle)
+            else
             {
                 // Prevents flickering transitions to idle
                 m_delayToIdle -= Time.deltaTime;
-                m_body2d.velocity = new Vector2((originPos - transform.position.x) * reloadSpeed, m_body2d.velocity.y);
                 if (m_delayToIdle < 0)
                     m_animator.SetInteger("AnimState", 0);
             }
-
         }
     }
 
