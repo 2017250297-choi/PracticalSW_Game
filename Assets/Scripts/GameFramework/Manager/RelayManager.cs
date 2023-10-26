@@ -2,6 +2,7 @@ using JetBrains.Annotations;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
+using Unity.Collections;
 using Unity.Services.Relay;
 using Unity.Services.Relay.Models;
 using UnityEditor;
@@ -10,11 +11,21 @@ namespace GameFramework.Core.GameFramework.Manager
 {
     public class RelayManager : Singleton<RelayManager>
     {
+        private bool _isHost = false;
+
         private string _joinCode; // 플레이어들이 연결을 위해 공유하는 코드
         private string _ip;
         private int _port;
+        private byte[] _key;
         private byte[] _connectionData; // raw format으로 저장됨
+        private byte[] _hostConnectionData;
         private System.Guid _allocationId;
+        private byte[] _allocationIdBytes;
+
+        public bool IsHost 
+        {
+            get { return _isHost; }
+        }
 
         public async Task<string> CreateRelay(int maxConnection) // 호스트 쪽에서 릴레이 서버를 만드는 메소드
         {
@@ -37,7 +48,13 @@ namespace GameFramework.Core.GameFramework.Manager
             _port = dtlsEndpoint.Port;
 
             _allocationId = allocation.AllocationId;
+            _allocationIdBytes = allocation.AllocationIdBytes;
             _connectionData = allocation.ConnectionData;
+            _key = allocation.Key; // 이미 allocation 안에 byte[]로 존재하는 것들을 받아옴
+            // GameManger.cs의 SetHostRelayData()에 인수로 넣어주기 위해 필요
+
+
+            _isHost = true; // CreateRelay를 하는 쪽이 호스트니까
 
             return _joinCode; // 연결된 다른 플레이어에게 같은 릴레이에 접속하도록 주는 코드
 
@@ -60,13 +77,27 @@ namespace GameFramework.Core.GameFramework.Manager
             _port = dtlsEndpoint.Port;
 
             _allocationId = allocation.AllocationId;
+            _allocationIdBytes = allocation.AllocationIdBytes;
             _connectionData = allocation.ConnectionData;
+            _hostConnectionData = allocation.HostConnectionData; // 여기만 JoinRealy에 추가된 거. 게스트 플레이어는 이 데이터가 필요
+            _key = allocation.Key;
             // 여기까지 코드가 CreateRelay와 동일해서 중복되지만, 
             // allocation 부분은 따로 메소드로 빼서 allocation을 넘겨주지 못하도록 되어 있다
             // 즉, 걍 이렇게 써야 함
 
             return true; // 호스트의 릴레이 서버에 잘 접속했다는 것을 알림
 
+        }
+
+
+        public (byte[] AllocationId, byte[] Key, byte[] ConnectionData, string _dtlsAddress, int _dtlsPort) GetHostConnectionInfo()
+        {
+            return (_allocationIdBytes, _key, _connectionData, _ip, _port); // 한 번에 여러 값을 묶어서 리턴
+        }
+
+        public (byte[] AllocationId, byte[] Key, byte[] ConnectionData, byte[] HostConnectionData, string _dtlsAddress, int _dtlsPort) GetClientConnectionInfo()
+        {
+            return (_allocationIdBytes, _key, _connectionData, _hostConnectionData, _ip, _port);
         }
 
 
