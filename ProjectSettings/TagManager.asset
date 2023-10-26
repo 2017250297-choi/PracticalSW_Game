@@ -3,7 +3,9 @@
 --- !u!78 &1
 TagManager:
   serializedVersion: 2
-  tags: []
+  tags:
+  - ManaSprite
+  - HealthSprite
   layers:
   - Default
   - TransparentFX
@@ -40,4 +42,16 @@ TagManager:
   m_SortingLayers:
   - name: Default
     uniqueID: 0
+    locked: 0
+  - name: farbackground
+    uniqueID: 3773456577
+    locked: 0
+  - name: background
+    uniqueID: 3941839419
+    locked: 0
+  - name: battlefield
+    uniqueID: 417272145
+    locked: 0
+  - name: foreground
+    uniqueID: 2568630307
     locked: 0
