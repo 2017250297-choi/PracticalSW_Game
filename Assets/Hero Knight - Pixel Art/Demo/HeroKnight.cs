@@ -31,19 +31,22 @@ public class HeroKnight : MonoBehaviour
     private int m_currentAttack = 0;
     private float m_timeSinceAttack = 0.0f;
     private float m_delayToIdle = 0.0f;
-    private float m_rollDuration = 8.0f / 14.0f;
+    private float m_rollDuration = 0.04f;
     private float m_rollCurrentTime;
     private float globalCoolDown = 0.0f;
+    private float originPos;
+    private float enemyPos;
 
     enum State
     {
         attack,
         dodge,
         idle,
+        reload,
     }
     private State nowState = State.idle;
     private bool isHitalbe = true;
-    private float attackDelay = 10.0f;
+    private float attackDelay = 2.0f;
     public float attackSpeed = 2.0f;
     public float reloadSpeed = 2.0f;
     public float dodgeSpeed = 2.0f;
@@ -70,19 +73,21 @@ public class HeroKnight : MonoBehaviour
     IEnumerator Attack()
     {
         nowState = State.attack;
-
-        attackDelay = 2.0f;
+        float temp = 0.0f;
         globalCoolDown = 3.0f;
         Debug.Log("attackStart");
-        enemyController = enemy.GetComponent<HeroKnight>();
-        while (attackDelay > 0)
+
+
+        Vector3 origin = transform.position;
+        Vector3 newPos = origin;
+        while (temp < attackDelay)
         {
-            attackDelay -= Time.deltaTime * attackSpeed;
+            temp += Time.deltaTime * attackSpeed;
+            m_body2d.velocity = new Vector2((enemyPos - transform.position.x) * 1 * m_speed, m_body2d.velocity.y);
             yield return null;
         }
         isHitalbe = false;
         Debug.Log("attack!");
-        attackDelay = 0.0f;
         enemyController.GetHitted(atk);
         m_currentAttack++;
 
@@ -90,10 +95,13 @@ public class HeroKnight : MonoBehaviour
             m_currentAttack = 1;
         // Call one of three attack animations "Attack1", "Attack2", "Attack3"
         m_animator.SetTrigger("Attack" + m_currentAttack);
+        yield return new WaitForSeconds(0.06f);
         isHitalbe = true;
-        while (globalCoolDown > 0)
+        temp = 0.0f;
+        nowState = State.reload;
+        while (globalCoolDown > temp)
         {
-            globalCoolDown -= Time.deltaTime * attackSpeed;
+            temp += Time.deltaTime * reloadSpeed;
             yield return null;
         }
         globalCoolDown = 0.0f;
@@ -104,19 +112,37 @@ public class HeroKnight : MonoBehaviour
     {
         nowState = State.dodge;
         isHitalbe = false;
+        float invincibleTime = 0.04f;
         globalCoolDown = 1.0f;
-        while (globalCoolDown > 0)
+        float temp = 0.0f;
+
+        m_rolling = true;
+        m_rollCurrentTime = 0.0f;
+        m_animator.SetTrigger("Roll");
+        Vector3 origin = transform.position;
+        Vector3 newPos = origin;
+        Debug.Log("dodge start");
+        while (temp < invincibleTime)
         {
-            globalCoolDown -= Time.deltaTime * dodgeSpeed;
+            temp += Time.deltaTime;
+            if (m_rolling)
+            {
+                m_body2d.velocity = new Vector2(-16f * m_speed * m_facingDirection, m_body2d.velocity.y);
+            }
             yield return null;
         }
-        globalCoolDown = 0.0f;
-        nowState = State.idle;
+        temp = 0.0f;
         isHitalbe = true;
+        nowState = State.reload;
+        while (globalCoolDown > temp)
+        {
 
-
-
-
+            temp += Time.deltaTime * reloadSpeed;
+            yield return null;
+        }
+        Debug.Log("dodge end");
+        nowState = State.idle;
+        globalCoolDown = 0.0f;
     }
 
 
@@ -130,11 +156,28 @@ public class HeroKnight : MonoBehaviour
         m_wallSensorR2 = transform.Find("WallSensor_R2").GetComponent<Sensor_HeroKnight>();
         m_wallSensorL1 = transform.Find("WallSensor_L1").GetComponent<Sensor_HeroKnight>();
         m_wallSensorL2 = transform.Find("WallSensor_L2").GetComponent<Sensor_HeroKnight>();
+        m_facingDirection = (GetComponent<SpriteRenderer>().flipX) ? -1 : 1;
+
+        enemyController = enemy.GetComponent<HeroKnight>();
+
+        originPos = transform.position.x;
+        enemyPos = enemy.transform.position.x;
+
     }
 
     // Update is called once per frame
     void Update()
     {
+        if (enemyPos - transform.position.x > 0)
+        {
+            m_facingDirection = 1;
+            GetComponent<SpriteRenderer>().flipX = false;
+        }
+        else
+        {
+            m_facingDirection = -1;
+            GetComponent<SpriteRenderer>().flipX = true;
+        }
         // Increase timer that controls attack combo
         m_timeSinceAttack += Time.deltaTime;
 
@@ -164,17 +207,7 @@ public class HeroKnight : MonoBehaviour
         float inputX = Input.GetAxis("Horizontal");
 
         // Swap direction of sprite depending on walk direction
-        if (inputX > 0)
-        {
-            GetComponent<SpriteRenderer>().flipX = false;
-            m_facingDirection = 1;
-        }
 
-        else if (inputX < 0)
-        {
-            GetComponent<SpriteRenderer>().flipX = true;
-            m_facingDirection = -1;
-        }
 
         // Move
         if (!m_rolling)
@@ -268,10 +301,11 @@ public class HeroKnight : MonoBehaviour
         }
 
         //Idle
-        else
+        if (nowState == State.reload || nowState == State.idle)
         {
             // Prevents flickering transitions to idle
             m_delayToIdle -= Time.deltaTime;
+            m_body2d.velocity = new Vector2((originPos - transform.position.x) * reloadSpeed, m_body2d.velocity.y);
             if (m_delayToIdle < 0)
                 m_animator.SetInteger("AnimState", 0);
         }
