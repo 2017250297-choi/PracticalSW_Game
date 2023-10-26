@@ -1,34 +1,127 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-public class HeroKnight : MonoBehaviour {
+public class HeroKnight : MonoBehaviour
+{
 
-    [SerializeField] float      m_speed = 4.0f;
-    [SerializeField] float      m_jumpForce = 7.5f;
-    [SerializeField] float      m_rollForce = 6.0f;
-    [SerializeField] bool       m_noBlood = false;
+    [SerializeField] float m_speed = 4.0f;
+    [SerializeField] float m_jumpForce = 7.5f;
+    [SerializeField] float m_rollForce = 6.0f;
+    [SerializeField] bool m_noBlood = false;
     [SerializeField] GameObject m_slideDust;
 
-    private Animator            m_animator;
-    private Rigidbody2D         m_body2d;
-    private Sensor_HeroKnight   m_groundSensor;
-    private Sensor_HeroKnight   m_wallSensorR1;
-    private Sensor_HeroKnight   m_wallSensorR2;
-    private Sensor_HeroKnight   m_wallSensorL1;
-    private Sensor_HeroKnight   m_wallSensorL2;
-    private bool                m_isWallSliding = false;
-    private bool                m_grounded = false;
-    private bool                m_rolling = false;
-    private int                 m_facingDirection = 1;
-    private int                 m_currentAttack = 0;
-    private float               m_timeSinceAttack = 0.0f;
-    private float               m_delayToIdle = 0.0f;
-    private float               m_rollDuration = 8.0f / 14.0f;
-    private float               m_rollCurrentTime;
+    [SerializeField] GameObject my_healthObj;
+    [SerializeField] GameObject enemy;
+    public string attack_key;
+    public string dodge_key;
+    private HeroKnight enemyController;
+    private HealthSystem healthSys;
+
+    private Animator m_animator;
+    private Rigidbody2D m_body2d;
+    private Sensor_HeroKnight m_groundSensor;
+    private Sensor_HeroKnight m_wallSensorR1;
+    private Sensor_HeroKnight m_wallSensorR2;
+    private Sensor_HeroKnight m_wallSensorL1;
+    private Sensor_HeroKnight m_wallSensorL2;
+    private bool m_isWallSliding = false;
+    private bool m_grounded = false;
+    private bool m_rolling = false;
+    private int m_facingDirection = 1;
+    private int m_currentAttack = 0;
+    private float m_timeSinceAttack = 0.0f;
+    private float m_delayToIdle = 0.0f;
+    private float m_rollDuration = 8.0f / 14.0f;
+    private float m_rollCurrentTime;
+    private float globalCoolDown = 0.0f;
+
+    enum State
+    {
+        attack,
+        dodge,
+        idle,
+    }
+    private State nowState = State.idle;
+    private bool isHitalbe = true;
+    private float attackDelay = 10.0f;
+    public float attackSpeed = 2.0f;
+    public float reloadSpeed = 2.0f;
+    public float dodgeSpeed = 2.0f;
+    public float atk = 10.0f;
+    public float def = 2.0f;
+
+
+    private bool hitted = false;
+    private bool actable = true;
+
+    public void GetHitted(float attackDmg)
+    {
+        healthSys = my_healthObj.GetComponent<HealthSystem>();
+        if (isHitalbe)
+        {
+            float dmg = CalculateDamage(attackDmg);
+            healthSys.TakeDamage(dmg);
+        }
+    }
+    float CalculateDamage(float attackDmg)
+    {
+        return (attackDmg - def);
+    }
+    IEnumerator Attack()
+    {
+        nowState = State.attack;
+
+        attackDelay = 2.0f;
+        globalCoolDown = 3.0f;
+        Debug.Log("attackStart");
+        enemyController = enemy.GetComponent<HeroKnight>();
+        while (attackDelay > 0)
+        {
+            attackDelay -= Time.deltaTime * attackSpeed;
+            yield return null;
+        }
+        isHitalbe = false;
+        Debug.Log("attack!");
+        attackDelay = 0.0f;
+        enemyController.GetHitted(atk);
+        m_currentAttack++;
+
+        if (m_currentAttack > 3)
+            m_currentAttack = 1;
+        // Call one of three attack animations "Attack1", "Attack2", "Attack3"
+        m_animator.SetTrigger("Attack" + m_currentAttack);
+        isHitalbe = true;
+        while (globalCoolDown > 0)
+        {
+            globalCoolDown -= Time.deltaTime * attackSpeed;
+            yield return null;
+        }
+        globalCoolDown = 0.0f;
+        Debug.Log("attackend");
+        nowState = State.idle;
+    }
+    IEnumerator Dodge()
+    {
+        nowState = State.dodge;
+        isHitalbe = false;
+        globalCoolDown = 1.0f;
+        while (globalCoolDown > 0)
+        {
+            globalCoolDown -= Time.deltaTime * dodgeSpeed;
+            yield return null;
+        }
+        globalCoolDown = 0.0f;
+        nowState = State.idle;
+        isHitalbe = true;
+
+
+
+
+    }
 
 
     // Use this for initialization
-    void Start ()
+    void Start()
     {
         m_animator = GetComponent<Animator>();
         m_body2d = GetComponent<Rigidbody2D>();
@@ -40,17 +133,17 @@ public class HeroKnight : MonoBehaviour {
     }
 
     // Update is called once per frame
-    void Update ()
+    void Update()
     {
         // Increase timer that controls attack combo
         m_timeSinceAttack += Time.deltaTime;
 
         // Increase timer that checks roll duration
-        if(m_rolling)
+        if (m_rolling)
             m_rollCurrentTime += Time.deltaTime;
 
         // Disable rolling if timer extends duration
-        if(m_rollCurrentTime > m_rollDuration)
+        if (m_rollCurrentTime > m_rollDuration)
             m_rolling = false;
 
         //Check if character just landed on the ground
@@ -76,7 +169,7 @@ public class HeroKnight : MonoBehaviour {
             GetComponent<SpriteRenderer>().flipX = false;
             m_facingDirection = 1;
         }
-            
+
         else if (inputX < 0)
         {
             GetComponent<SpriteRenderer>().flipX = true;
@@ -84,7 +177,7 @@ public class HeroKnight : MonoBehaviour {
         }
 
         // Move
-        if (!m_rolling )
+        if (!m_rolling)
             m_body2d.velocity = new Vector2(inputX * m_speed, m_body2d.velocity.y);
 
         //Set AirSpeed in animator
@@ -101,13 +194,13 @@ public class HeroKnight : MonoBehaviour {
             m_animator.SetBool("noBlood", m_noBlood);
             m_animator.SetTrigger("Death");
         }
-            
+
         //Hurt
         else if (Input.GetKeyDown("q") && !m_rolling)
             m_animator.SetTrigger("Hurt");
 
         //Attack
-        else if(Input.GetMouseButtonDown(0) && m_timeSinceAttack > 0.25f && !m_rolling)
+        else if (Input.GetMouseButtonDown(0) && m_timeSinceAttack > 0.25f && !m_rolling)
         {
             m_currentAttack++;
 
@@ -124,6 +217,17 @@ public class HeroKnight : MonoBehaviour {
 
             // Reset timer
             m_timeSinceAttack = 0.0f;
+        }
+
+        else if (Input.GetKeyDown(attack_key) && nowState == State.idle)
+        {
+
+            StartCoroutine(Attack());
+
+        }
+        else if (Input.GetKeyDown(dodge_key) && nowState == State.idle)
+        {
+            StartCoroutine(Dodge());
         }
 
         // Block
@@ -143,7 +247,7 @@ public class HeroKnight : MonoBehaviour {
             m_animator.SetTrigger("Roll");
             m_body2d.velocity = new Vector2(m_facingDirection * m_rollForce, m_body2d.velocity.y);
         }
-            
+
 
         //Jump
         else if (Input.GetKeyDown("space") && m_grounded && !m_rolling)
@@ -168,8 +272,8 @@ public class HeroKnight : MonoBehaviour {
         {
             // Prevents flickering transitions to idle
             m_delayToIdle -= Time.deltaTime;
-                if(m_delayToIdle < 0)
-                    m_animator.SetInteger("AnimState", 0);
+            if (m_delayToIdle < 0)
+                m_animator.SetInteger("AnimState", 0);
         }
     }
 
