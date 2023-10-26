@@ -23,6 +23,8 @@ namespace Game // Game 폴더 내의 Init.cs, LobbyUI.cs 등의 스크립트 파일들을 Game
         private LobbyPlayerData _localLobbyPlayerData; // 로컬 플레이어 (게임하는 본인)의 데이터가 저장되는 곳
         private LobbyData _lobbyData; // 릴레이 조인 코드 등이 저장됨. 맵 선택 기능 추가 시 맵 정보도 여기에 들어감
         private int _maxNumberOfPlayers = 2; // 수정 안 하고 싶으니까 private으로
+        private bool _inGame = false; // 로비에서 릴레이 서버로 이동하고 게임이 시작되면 로비는 멈춰주어야 함. (로비가 계속 lobbyUpdate를 리슨 중인데, 그걸 멈추어야) 그걸 위한 값
+
         public bool IsHost => _localLobbyPlayerData.Id == LobbyManager.Instance.GetHostId();
 
 
@@ -152,8 +154,10 @@ namespace Game // Game 폴더 내의 Init.cs, LobbyUI.cs 등의 스크립트 파일들을 Game
                 // 호스트 혼자 있을 때 실행되지 않도록 코드 수정 필요!!!
             }
 
-            if (_lobbyData.RelayJoinCode != default) // lobbyData에서 릴레이 조인 코드가 initialize되어 비어있지 않다면,
+            if (_lobbyData.RelayJoinCode != default && !_inGame) // lobbyData에서 릴레이 조인 코드가 initialize되어 비어있지 않다면, 그리고 게임 실행 중이 아니라면
             {
+                // !_inGame 조건을 주어야 게임 실행 중에 계속 이 코드가 실행되어 씬으로 이동하려는 것을 막을 수 있음. 한 번 이동하면 끝내주어야...
+
                 await JoinRelayServer(_lobbyData.RelayJoinCode); // 이 조인 코드를 이용해 릴레이 서버에 참여시켜줌
                 SceneManager.LoadSceneAsync("MultiPlayScene"); // 그 다음 플레이 씬으로 이동
                 // 이 if문 안은 게스트 측을 위한 것. 
@@ -178,6 +182,7 @@ namespace Game // Game 폴더 내의 Init.cs, LobbyUI.cs 등의 스크립트 파일들을 Game
         {
             string relayJoinCode = await RelayManager.Instance.CreateRelay(_maxNumberOfPlayers); // 릴레이 생성 시 최대 플레이어 수 넘겨주어야 함.
             // CreateRelay는 실행 후 조인 코드를 리턴. 그것을 joinRelayCode에 저장
+            _inGame = true;
 
             _lobbyData.RelayJoinCode = relayJoinCode; // lobbyData에 받아온 릴레이 조인 코드 저장해주고
             await LobbyManager.Instance.UpdateLobbyData(_lobbyData.Serialize()); // 업뎃된 lobbyData 반영 -> 로비 업뎃
@@ -197,6 +202,8 @@ namespace Game // Game 폴더 내의 Init.cs, LobbyUI.cs 등의 스크립트 파일들을 Game
 
         private async Task<bool> JoinRelayServer(string relayJoinCode)
         {
+            _inGame = true;
+
             await RelayManager.Instance.JoinRelay(relayJoinCode);
 
             // StartGame의 코드와 동일. connection data를 이용해 플레이어 데이터를 업데이트.
