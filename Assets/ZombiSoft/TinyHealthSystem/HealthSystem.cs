@@ -111,6 +111,13 @@ public class HealthSystem : MonoBehaviour
 
 		StartCoroutine(PlayerHurts());
 	}
+	public bool isDead()
+	{
+		if (hitPoint <= 0)
+			return true;
+		else
+			return false;
+	}
 
 	public void HealDamage(float Heal)
 	{
