@@ -12,6 +12,7 @@ public class StartMenuController : MonoBehaviour
     [SerializeField] private GameObject _joinScreen;
     [SerializeField] private Button _hostButton;
     [SerializeField] private Button _joinButton;
+    [SerializeField] private Button _backButton;
 
     [SerializeField] private Button _submitCodeButton;
     [SerializeField] private TextMeshProUGUI _codeText;
@@ -21,6 +22,7 @@ public class StartMenuController : MonoBehaviour
     {
         _hostButton.onClick.AddListener(OnHostClicked);
         _joinButton.onClick.AddListener(OnJoinClicked);
+        _backButton.onClick.AddListener(OnBackClicked);
         _submitCodeButton.onClick.AddListener(OnSubmitCodeButton);
 
         //_joinScreen.SetActive(false);
@@ -30,6 +32,7 @@ public class StartMenuController : MonoBehaviour
     {
         _hostButton.onClick.RemoveListener(OnHostClicked);
         _joinButton.onClick.RemoveListener(OnJoinClicked);
+        _backButton.onClick.RemoveListener(OnBackClicked);
         _submitCodeButton.onClick.RemoveListener(OnSubmitCodeButton);
 
         //_joinScreen.SetActive(false);
@@ -52,6 +55,12 @@ public class StartMenuController : MonoBehaviour
 
         _mainScreen.SetActive(false);
         _joinScreen.SetActive(true);
+    }
+
+    private void OnBackClicked()
+    {
+        _joinScreen.SetActive(false);
+        _mainScreen.SetActive(true);
     }
 
     private async void OnSubmitCodeButton()
