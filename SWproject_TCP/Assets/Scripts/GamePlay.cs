@@ -4,6 +4,7 @@ using UnityEngine;
 using System;
 using System.Net;
 using TMPro;
+using System.Linq;
 
 public class GamePlay : MonoBehaviour
 {
@@ -95,43 +96,48 @@ public class GamePlay : MonoBehaviour
         // 호스트명 가져오기
         string hostname = Dns.GetHostName();
         // 호스트명에서 IP주소를 가져옴
-        IPAddress[] adrList = Dns.GetHostAddresses(hostname);
-        m_serverAddress = adrList[0].ToString();
+        //IPAddress[] adrList = Dns.GetHostAddresses(hostname);
+        IPHostEntry host = Dns.GetHostEntry(hostname);
+        //m_serverAddress = adrList[0].ToString();
+        m_serverAddress = host.AddressList.FirstOrDefault(a => a.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork).ToString();
+
 
     }
 
     // Update is called once per frame
     void Update()
     {
-        Debug.Log(m_gameState); // 나중에 없애기
+        //Debug.Log(m_gameState); // 나중에 없애기
 
         switch(m_gameState)
         {
             case GameState.None:
                 break;
+
             case GameState.Ready:
                 UpdateReady();
                 break;
+
             case GameState.Countdown:
                 UpdateCountdown();
                 break;
-        }
 
-    }
+            case GameState.Action:
+                UpdateAction();
+                break;
 
+            case GameState.Result:
+                UpdateResult();
+                break;
 
-    // 이벤트 발생 시 콜백 함수
-    public void EventCallback(NetEventState state)
-    {
-        switch (state.type)
-        {
-            case NetEventType.Disconnect: // 연결이 끊어진 이벤트가 들어오면
-                if (m_gameState < GameState.EndGame && m_isGameOver == false)
-                {
-                    m_gameState = GameState.Disconnect; // 게임 상태를 Diconnect로 변경
-                }
+            case GameState.EndGame:
+                UpdateEndGame();
+                break;
+
+            case GameState.Disconnect:
                 break;
         }
+
     }
 
 
@@ -166,6 +172,8 @@ public class GamePlay : MonoBehaviour
                 m_serverPlayer.name = m_serverPlayerPrefab.name;
 
                 GameObject.Find("Title").SetActive(false); // 타이틀 표시 OFF
+
+                Debug.Log("서버 생성, 접속");
             }
 
             // 클라이언트를 선택했을 때 접속할 서버의 주소 입력
@@ -189,6 +197,7 @@ public class GamePlay : MonoBehaviour
 
                 GameObject.Find("Title").SetActive(false);
 
+                Debug.Log("클라이언트 접속");
             }
         }
     }
@@ -264,10 +273,66 @@ public class GamePlay : MonoBehaviour
     }
 
 
+    // 공격/회피 선택(실행)
+    void UpdateAction()
+    {
+
+    }
+
+    // 상대방의 공격/회피 통신 대기
+    void UpdateWaitAction()
+    {
+        // 수신대기
+    }
+
+
+    // 체력바 반영
+    void UpdateHP()
+    {
+
+    }
+
+
+    // 게임 종료
+    void UpdateEndGame()
+    {
+
+    }
+
+
     // 게임 종료 시 화면
     void OnGUIEndGame()
     {
 
+    }
+
+
+    // 게임 종료 체크
+    public bool IsGameOver()
+    {
+        return m_isGameOver;
+    }
+
+
+    // 게임 결과 표시
+    void UpdateResult()
+    {
+
+    }
+
+
+    // 이벤트 발생 시 콜백 함수
+    public void EventCallback(NetEventState state)
+    {
+        switch (state.type)
+        {
+            case NetEventType.Disconnect: // 연결이 끊어진 이벤트가 들어오면
+                if (m_gameState < GameState.EndGame && m_isGameOver == false)
+                {
+                    m_gameState = GameState.Disconnect; // 게임 상태를 Diconnect로 변경
+                }
+                break;
+        }
     }
 
 

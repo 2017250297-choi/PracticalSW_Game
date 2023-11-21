@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using System;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading;
@@ -112,13 +113,16 @@ public class TransportTCP : MonoBehaviour
         try
         {
             m_socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+            Debug.Log("1. m_socket: " + m_socket);
             m_socket.NoDelay = true;
             m_socket.Connect(address, port);
+            Debug.Log("2. m_socket: " + m_socket);
             ret = LaunchThread();
         }
-        catch
+        catch (Exception e)
         {
             m_socket = null;
+            Debug.Log(e);
         }
 
         if (ret == true)
@@ -129,7 +133,7 @@ public class TransportTCP : MonoBehaviour
         else
         {
             m_isConnected = false;
-            Debug.Log("Connection fail");
+            Debug.Log("Connect fail");
         }
 
         if (m_handler != null)
@@ -219,10 +223,11 @@ public class TransportTCP : MonoBehaviour
             m_threadLoop = true;
             m_thread = new Thread(new ThreadStart(Dispatch));
             m_thread.Start();
+            Debug.Log("Thread start");
         }
         catch
         {
-            Debug.Log("Cannot laumch thread.");
+            Debug.Log("Cannot launch thread.");
             return false;
         }
 
@@ -321,6 +326,7 @@ public class TransportTCP : MonoBehaviour
                 { // 받아온 데이터가 없으면
                     // 접속 종료
                     Debug.Log("Disconnect recv from client.");
+                    Disconnect();
                 }
                 else if (recvSize > 0)
                 { // 받아온 데이터가 있으면
