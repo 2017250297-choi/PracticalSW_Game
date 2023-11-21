@@ -1,22 +1,22 @@
-using System.Collections;
+ï»¿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
 
-// °ø°Ý/È¸ÇÇ ¼³Á¤
+// ê³µê²©/íšŒí”¼ ì„¤ì •
 public enum ActionKind
 {
     None = 0,
-    Attack, // °ø°Ý
-    Avoid, // È¸ÇÇ
+    Attack, // ê³µê²©
+    Avoid, // íšŒí”¼
 };
 
-// °ø°Ý/È¸ÇÇ Á¤º¸ ±¸Á¶Ã¼
+// ê³µê²©/íšŒí”¼ ì •ë³´ êµ¬ì¡°ì²´
 public struct AttackInfo
 {
     public ActionKind actionKind;
-    public float actionTime; // °æ°ú ½Ã°£. ¼­·ÎÀÇ °ø°Ý/È¸ÇÇ Å¸ÀÌ¹ÖÀ» ºñ±³ÇÏ´Â ¿ëµµ
-    // µ¥¹ÌÁö °ªµµ ¿©±â¿¡ ³ÖÀ¸¸é µÉ °Í °°Àº?
+    public float actionTime; // ê²½ê³¼ ì‹œê°„. ì„œë¡œì˜ ê³µê²©/íšŒí”¼ íƒ€ì´ë°ì„ ë¹„êµí•˜ëŠ” ìš©ë„
+    // ë°ë¯¸ì§€ ê°’ë„ ì—¬ê¸°ì— ë„£ìœ¼ë©´ ë  ê²ƒ ê°™ì€?
 
     public AttackInfo(ActionKind kind, float time)
     {
@@ -32,18 +32,18 @@ public struct InputData
 }
 
 
-// ½ÂÀÚ ½Äº°
+// ìŠ¹ìž ì‹ë³„
 public enum Winner
 {
     None = 0,
-    ServerPlayer, // ¼­¹ö ÂÊ(1P) ½Â¸® (°ø°Ý ¼º°ø)
-    ClientPlayer, // Å¬¶óÀÌ¾ðÆ® ÂÊ(2P) ½Â¸® (°ø°Ý ¼º°ø)
+    ServerPlayer, // ì„œë²„ ìª½(1P) ìŠ¹ë¦¬ (ê³µê²© ì„±ê³µ)
+    ClientPlayer, // í´ë¼ì´ì–¸íŠ¸ ìª½(2P) ìŠ¹ë¦¬ (ê³µê²© ì„±ê³µ)
     Draw,
 };
 
 class ResultChecker
 {
-    // °ø°Ý/È¸ÇÇ¿¡¼­ ½ÂÆÐ ±¸ÇÏ±â
+    // ê³µê²©/íšŒí”¼ì—ì„œ ìŠ¹íŒ¨ êµ¬í•˜ê¸°
     public static Winner GetActionWinner(AttackInfo server, AttackInfo client)
     {
         string debugStr = "server.actionKind: " + server.actionKind.ToString() + " time: " + server.actionTime.ToString();
@@ -53,72 +53,72 @@ class ResultChecker
         ActionKind serverAction = server.actionKind;
         ActionKind clientAction = client.actionKind;
 
-        // °ø°Ý/È¸ÇÇ°¡ ¹Ù¸£°Ô ÀÌ·ç¾îÁ³´ÂÁö ÆÇÁ¤
+        // ê³µê²©/íšŒí”¼ê°€ ë°”ë¥´ê²Œ ì´ë£¨ì–´ì¡ŒëŠ”ì§€ íŒì •
         if (serverAction != ActionKind.Attack && clientAction != ActionKind.Attack)
         {
-            // ¾çÃøÀÌ ¾Æ¹«°Íµµ ÇÏÁö ¾Ê°Å³ª/È¸ÇÇÇÏ°Å³ª µÑ Áß ÇÏ³ª¸¦ ÇÔ (¾çÃø ´Ù °ø°ÝÇÏÁö ¾ÊÀ½)
+            // ì–‘ì¸¡ì´ ì•„ë¬´ê²ƒë„ í•˜ì§€ ì•Šê±°ë‚˜/íšŒí”¼í•˜ê±°ë‚˜ ë‘˜ ì¤‘ í•˜ë‚˜ë¥¼ í•¨ (ì–‘ì¸¡ ë‹¤ ê³µê²©í•˜ì§€ ì•ŠìŒ)
             return Winner.None;
         }
 
 
-        // ½Ã°£ ´ë°á (°ø°Ý/È¸ÇÇ Å¸ÀÌ¹Ö ÆÇÁ¤)
+        // ì‹œê°„ ëŒ€ê²° (ê³µê²©/íšŒí”¼ íƒ€ì´ë° íŒì •)
         float serverTime = server.actionTime;
         float clientTime = client.actionTime;
 
-        /* ÁÖÀÇ!!
-           È¸ÇÇ Å°¸¦ ´­·¶À» ¶§ È¸ÇÇ°¡ À¯È¿ÇÑ ½Ã°£À» ¼³Á¤ÇØ¾ß ÇÔ!
-           È¸ÇÇ ¸ÕÀú ´©¸£°í »ó´ë°¡ °ø°ÝÀ» ´­·¶À» ¶§,
-           ÀÌ È¸ÇÇ°¡ ¾ó¸¶³ª ¿À·¡ À¯È¿ÇÑÁö¸¦ Á¤ÇÏ°í ¾Æ·¡ ÄÚµå¿¡ ¹Ý¿µÇØÁÖÀÚ!!
+        /* ì£¼ì˜!!
+           íšŒí”¼ í‚¤ë¥¼ ëˆŒë €ì„ ë•Œ íšŒí”¼ê°€ ìœ íš¨í•œ ì‹œê°„ì„ ì„¤ì •í•´ì•¼ í•¨!
+           íšŒí”¼ ë¨¼ì € ëˆ„ë¥´ê³  ìƒëŒ€ê°€ ê³µê²©ì„ ëˆŒë €ì„ ë•Œ,
+           ì´ íšŒí”¼ê°€ ì–¼ë§ˆë‚˜ ì˜¤ëž˜ ìœ íš¨í•œì§€ë¥¼ ì •í•˜ê³  ì•„ëž˜ ì½”ë“œì— ë°˜ì˜í•´ì£¼ìž!!
 
-           ÇöÀç ¹ÙÅÁÀ¸·Î Âü°íÇÑ ÄÚµå´Â ´ÜÆÇ ¾×¼Ç °ÔÀÓÀÌ°í,
-           µû¶ó¼­ ±×³É ¸ÕÀú °ø°Ý/È¸ÇÇ¸¦ ´©¸¥ »ç¶÷ÀÌ ¼º°øÀÓ.
+           í˜„ìž¬ ë°”íƒ•ìœ¼ë¡œ ì°¸ê³ í•œ ì½”ë“œëŠ” ë‹¨íŒ ì•¡ì…˜ ê²Œìž„ì´ê³ ,
+           ë”°ë¼ì„œ ê·¸ëƒ¥ ë¨¼ì € ê³µê²©/íšŒí”¼ë¥¼ ëˆ„ë¥¸ ì‚¬ëžŒì´ ì„±ê³µìž„.
 
-           ¿ì¸® °ÔÀÓÀº °è¼ÓÇØ¼­ °ø°Ý/È¸ÇÇ ¹öÆ°À» ´©¸¦ ¼ö ÀÖ±â ¶§¹®¿¡,
-           ÇÑ ¹öÆ°À» ´­·¶À» ¶§ ÀÏÁ¤ ½Ã°£ ´ÙÀ½ ÀÔ·ÂÀÌ ¹Ù·Î ¹Ý¿µµÇÁö ¾Êµµ·Ï
-           Áö¿¬ ½Ã°£À» Á¤ÇØ¾ß ÇÏ°í, ±× ½Ã°£ µ¿¾ÈÀÇ ÀÔ·ÂÀº ¹«½ÃÇØ¾ß ÇÔ.
-           Áö¿¬ ½Ã°£ÀÌ Áö³­ ´ÙÀ½ µé¾î¿Â ÀÔ·Â¿¡ ´ëÇØ¼­¸¸ ¼ÒÄÏÀ¸·Î º¸³»µµ·Ï ÇÔ.
-           ±×·¯³ª ³» Áö¿¬ ½Ã°£ µ¿¾È »ó´ë¹æÀÌ ÀÔ·ÂÇÑ °ø°Ý/È¸ÇÇ °ª¿¡ ´ëÇØ¼­µµ
-           ¼ÒÄÏÀ¸·Î ¹Þ¾Æ¼­ Ã³¸®ÇØ¾ß ÇÔ.
+           ìš°ë¦¬ ê²Œìž„ì€ ê³„ì†í•´ì„œ ê³µê²©/íšŒí”¼ ë²„íŠ¼ì„ ëˆ„ë¥¼ ìˆ˜ ìžˆê¸° ë•Œë¬¸ì—,
+           í•œ ë²„íŠ¼ì„ ëˆŒë €ì„ ë•Œ ì¼ì • ì‹œê°„ ë‹¤ìŒ ìž…ë ¥ì´ ë°”ë¡œ ë°˜ì˜ë˜ì§€ ì•Šë„ë¡
+           ì§€ì—° ì‹œê°„ì„ ì •í•´ì•¼ í•˜ê³ , ê·¸ ì‹œê°„ ë™ì•ˆì˜ ìž…ë ¥ì€ ë¬´ì‹œí•´ì•¼ í•¨.
+           ì§€ì—° ì‹œê°„ì´ ì§€ë‚œ ë‹¤ìŒ ë“¤ì–´ì˜¨ ìž…ë ¥ì— ëŒ€í•´ì„œë§Œ ì†Œì¼“ìœ¼ë¡œ ë³´ë‚´ë„ë¡ í•¨.
+           ê·¸ëŸ¬ë‚˜ ë‚´ ì§€ì—° ì‹œê°„ ë™ì•ˆ ìƒëŒ€ë°©ì´ ìž…ë ¥í•œ ê³µê²©/íšŒí”¼ ê°’ì— ëŒ€í•´ì„œë„
+           ì†Œì¼“ìœ¼ë¡œ ë°›ì•„ì„œ ì²˜ë¦¬í•´ì•¼ í•¨.
 
-           serverTime°ú clientTimeÀÌ ºñ±³µÈ ÈÄ¿¡´Â ´Ù½Ã ¸®¼ÂµÇ°í,
-           ±×°ÍÀÌ ¼­·Î ÀÏÄ¡ÇØ¾ß ÇÑ´Ù´Â °Íµµ À¯ÀÇÇØ¼­ Å×½ºÆ®ÇÏÀÚ!
+           serverTimeê³¼ clientTimeì´ ë¹„êµëœ í›„ì—ëŠ” ë‹¤ì‹œ ë¦¬ì…‹ë˜ê³ ,
+           ê·¸ê²ƒì´ ì„œë¡œ ì¼ì¹˜í•´ì•¼ í•œë‹¤ëŠ” ê²ƒë„ ìœ ì˜í•´ì„œ í…ŒìŠ¤íŠ¸í•˜ìž!
         */
 
         if (serverAction == ActionKind.Attack)
         {
-            // °ø°Ý-°ø°ÝÀÌ°Å³ª °ø°Ý-È¸ÇÇÀÎ °æ¿ì
-            // 1P°¡ 2Pº¸´Ù ºü¸¦ ¶§, °ø°Ý ¼º°ø
+            // ê³µê²©-ê³µê²©ì´ê±°ë‚˜ ê³µê²©-íšŒí”¼ì¸ ê²½ìš°
+            // 1Pê°€ 2Pë³´ë‹¤ ë¹ ë¥¼ ë•Œ, ê³µê²© ì„±ê³µ
             if (serverTime < clientTime)
             {
                 return Winner.ServerPlayer;
             }
             else if (clientAction == ActionKind.Attack)
             {
-                // °ø°Ý-°ø°ÝÀÎµ¥ 1P°¡ ´Ê¾úÀ» ¶§, 2PÀÇ °ø°Ý ¼º°ø
+                // ê³µê²©-ê³µê²©ì¸ë° 1Pê°€ ëŠ¦ì—ˆì„ ë•Œ, 2Pì˜ ê³µê²© ì„±ê³µ
                 return Winner.ClientPlayer;
             }
             else
             {
-                // °ø°Ý-È¸ÇÇÀÎµ¥ 1P°¡ ´Ê¾úÀ» ¶§, 2PÀÇ È¸ÇÇ ¼º°ø
+                // ê³µê²©-íšŒí”¼ì¸ë° 1Pê°€ ëŠ¦ì—ˆì„ ë•Œ, 2Pì˜ íšŒí”¼ ì„±ê³µ
                 return Winner.Draw;
             }
         }
         else
         {
-            // È¸ÇÇ-°ø°ÝÀÎ °æ¿ì
-            // 2Pº¸´Ù ´À¸®¸é È¸ÇÇ ½ÇÆÐ
+            // íšŒí”¼-ê³µê²©ì¸ ê²½ìš°
+            // 2Pë³´ë‹¤ ëŠë¦¬ë©´ íšŒí”¼ ì‹¤íŒ¨
             if (serverTime > clientTime)
             {
                 return Winner.ClientPlayer;
             }
             else
             {
-                // È¸ÇÇ-°ø°ÝÀÎµ¥ 2P°¡ ´Ê¾úÀ» ¶§, 1PÀÇ È¸ÇÇ ¼º°ø
+                // íšŒí”¼-ê³µê²©ì¸ë° 2Pê°€ ëŠ¦ì—ˆì„ ë•Œ, 1Pì˜ íšŒí”¼ ì„±ê³µ
                 return Winner.Draw;
             }
         }
 
-        // ½Ã°£ÀÌ µ¿ÀÏÇÒ ¶§, ¹«½ÂºÎ
+        // ì‹œê°„ì´ ë™ì¼í•  ë•Œ, ë¬´ìŠ¹ë¶€
         // return Winner.Draw;
     }
 }

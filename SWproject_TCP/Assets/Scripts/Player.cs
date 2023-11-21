@@ -1,20 +1,20 @@
-using System.Collections;
+ï»¿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
 public class Player : MonoBehaviour
 {
-    // public AudioClip m_attackSE; // °ø°İ ½Ã À½Çâ
-    // public AudioClip m_avoidSE; // È¸ÇÇ ½Ã À½Çâ 
-    // µîµî... À½Çâµµ ¿©±â¼­ Á¤ÀÇ
+    // public AudioClip m_attackSE; // ê³µê²© ì‹œ ìŒí–¥
+    // public AudioClip m_avoidSE; // íšŒí”¼ ì‹œ ìŒí–¥ 
+    // ë“±ë“±... ìŒí–¥ë„ ì—¬ê¸°ì„œ ì •ì˜
 
-    // ¾Ö´Ï¸ŞÀÌ¼Ç Á¤ÀÇ
+    // ì• ë‹ˆë©”ì´ì…˜ ì •ì˜
     public enum Motion
     {
-        Idle, // ´ë±â µ¿ÀÛ
-        Attack, // °ø°İ
-        Avoid, // È¸ÇÇ
-        Hurt, // µ¥¹ÌÁö ÀÔÀ½
+        Idle, // ëŒ€ê¸° ë™ì‘
+        Attack, // ê³µê²©
+        Avoid, // íšŒí”¼
+        Hurt, // ë°ë¯¸ì§€ ì…ìŒ
     };
     Motion m_currentMotion;
     Animation m_anim;
@@ -44,13 +44,13 @@ public class Player : MonoBehaviour
                 if (m_anim.isPlaying == false)
                 {
                     ChangeAnimation(Motion.Idle);
-                    // ´ë±â ¸ğ¼ÇÀ¸·Î ÀüÈ¯ÇÒ ¶§ ÇÃ·¹ÀÌ¾î Ç¥±â¸¦ ³½´Ù.
+                    // ëŒ€ê¸° ëª¨ì…˜ìœ¼ë¡œ ì „í™˜í•  ë•Œ í”Œë ˆì´ì–´ í‘œê¸°ë¥¼ ë‚¸ë‹¤.
                     GameObject board = GameObject.Find("BoardYou");
                     board.GetComponent<BoardYou>().Run();
                 }
                 break;
             */
-            case Motion.Idle: // ´ë±â ¸ğ¼Ç
+            case Motion.Idle: // ëŒ€ê¸° ëª¨ì…˜
             case Motion.Attack:
             case Motion.Avoid:
             case Motion.Hurt:
@@ -67,10 +67,10 @@ public class Player : MonoBehaviour
 
     public void ChangeAnimationAction(ActionKind action)
     {
-        // ¼­¹ö Å¬¶óÀÌ¾ğÆ®¿¡¼­ÀÇ ÆÇÁ¤¸¸ ÇÒ ¼ö ÀÖÀ¸¹Ç·Î
-        // Winner.serverPlayer¸é ÀÚ½ÅÀÇ ½Â¸®·Î ´Ù·é´Ù
+        // ì„œë²„ í´ë¼ì´ì–¸íŠ¸ì—ì„œì˜ íŒì •ë§Œ í•  ìˆ˜ ìˆìœ¼ë¯€ë¡œ
+        // Winner.serverPlayerë©´ ìì‹ ì˜ ìŠ¹ë¦¬ë¡œ ë‹¤ë£¬ë‹¤
 
-        // case Winner.ServerPlayer: // °ø°İÀÌ ÀÚ½ÅÀÇ ½Â
+        // case Winner.ServerPlayer: // ê³µê²©ì´ ìì‹ ì˜ ìŠ¹
         // if (action == ActionKind.Attack) {
         // ChangeAnimationAttack();
         // }
@@ -78,14 +78,14 @@ public class Player : MonoBehaviour
     }
 
 
-    // ¾Ö´Ï¸ŞÀÌ¼ÇÀÌ ³¡³ª¸é true ¸®ÅÏ
+    // ì• ë‹ˆë©”ì´ì…˜ì´ ëë‚˜ë©´ true ë¦¬í„´
     public bool IsCurrentAnimationEnd()
     {
         return (m_anim.isPlaying == false);
     }
 
 
-    // ´ë±â ¾Ö´Ï¸ŞÀÌ¼Ç ÁßÀÌ¸é true ¸®ÅÏ
+    // ëŒ€ê¸° ì• ë‹ˆë©”ì´ì…˜ ì¤‘ì´ë©´ true ë¦¬í„´
     public bool IsIdleAnimation()
     {
         return (m_currentMotion == Motion.Idle);

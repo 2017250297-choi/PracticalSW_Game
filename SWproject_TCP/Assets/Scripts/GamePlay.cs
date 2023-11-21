@@ -1,4 +1,4 @@
-using System.Collections;
+ï»¿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using System;
@@ -8,20 +8,20 @@ using System.Linq;
 
 public class GamePlay : MonoBehaviour
 {
-    public GameObject m_serverPlayerPrefab; // ¼­¹ö Ãø ÇÃ·¹ÀÌ¾î Ä³¸¯ÅÍ
-    public GameObject m_clientPlayerPrefab; // Å¬¶óÀÌ¾ğÆ® Ãø ÇÃ·¹ÀÌ¾î Ä³¸¯ÅÍ
+    public GameObject m_serverPlayerPrefab; // ì„œë²„ ì¸¡ í”Œë ˆì´ì–´ ìºë¦­í„°
+    public GameObject m_clientPlayerPrefab; // í´ë¼ì´ì–¸íŠ¸ ì¸¡ í”Œë ˆì´ì–´ ìºë¦­í„°
 
-    public GameObject m_CountdownObject; // Ä«¿îÆ®´Ù¿î Ç¥½Ã ÀÌ¹ÌÁö ¸ğÀ½
+    public GameObject m_CountdownObject; // ì¹´ìš´íŠ¸ë‹¤ìš´ í‘œì‹œ ì´ë¯¸ì§€ ëª¨ìŒ
 
-    public GameObject m_damageTextPrefab; // µ¥¹ÌÁö Ç¥½Ã
+    public GameObject m_damageTextPrefab; // ë°ë¯¸ì§€ í‘œì‹œ
 
-    public GameObject m_finalResultWinPrefab; // ÃÖÁ¾ °á°ú ½Â¸®
-    public GameObject m_finalResultLosePrefab; // ÃÖÁ¾ °á°ú ÆĞ¹è
+    public GameObject m_finalResultWinPrefab; // ìµœì¢… ê²°ê³¼ ìŠ¹ë¦¬
+    public GameObject m_finalResultLosePrefab; // ìµœì¢… ê²°ê³¼ íŒ¨ë°°
 
 
     const int PLAYER_NUM = 2;
-    GameObject m_serverPlayer; // ÀÚÁÖ »ç¿ëÇÏ¹Ç·Î È®º¸
-    GameObject m_clientPlayer; // ÀÚÁÖ »ç¿ëÇÏ¹Ç·Î È®º¸
+    GameObject m_serverPlayer; // ìì£¼ ì‚¬ìš©í•˜ë¯€ë¡œ í™•ë³´
+    GameObject m_clientPlayer; // ìì£¼ ì‚¬ìš©í•˜ë¯€ë¡œ í™•ë³´
 
     GameState m_gameState = GameState.None;
     InputData[] m_inputData = new InputData[PLAYER_NUM];
@@ -29,34 +29,34 @@ public class GamePlay : MonoBehaviour
     string m_serverAddress;
 
     int m_playerId = 0;
-    int[] m_hp = new int[PLAYER_NUM]; // ¼­·ÎÀÇ Ã¼·Â
+    int[] m_hp = new int[PLAYER_NUM]; // ì„œë¡œì˜ ì²´ë ¥
     Winner m_actionWinner = Winner.None;
     bool m_isGameOver = false;
 
-    // °ø°İ/È¸ÇÇ ¼Û¼ö½Å ´ë±â¿ë
+    // ê³µê²©/íšŒí”¼ ì†¡ìˆ˜ì‹  ëŒ€ê¸°ìš©
     float m_timer;
     bool m_isSendAction;
     bool m_isReceiveAction;
 
-    // Ä«¿îÆ®´Ù¿î¿ë
+    // ì¹´ìš´íŠ¸ë‹¤ìš´ìš©
     private float startTime;
 
 
-    // °ÔÀÓ ÁøÇà »óÈ²
+    // ê²Œì„ ì§„í–‰ ìƒí™©
     enum GameState
     {
         None = 0,
-        Ready, // °ÔÀÓ »ó´ëÀÇ ·Î±×ÀÎ ´ë±â
-        Countdown, // Ä«¿îÆ®´Ù¿î ½ÃÀÛ
-        Action, // (°ÔÀÓ ½ÃÀÛ) °ø°İ/È¸ÇÇ ¼±ÅÃ, ¼ö½Å ´ë±â
-        EndAction, // °ø°İ/È¸ÇÇ ¿¬Ãâ
-        Result, // °á°ú ¹ßÇ¥
-        EndGame, // ³¡
-        Disconnect, // ¿À·ù (¿¬°á ¾È µÊ)
+        Ready, // ê²Œì„ ìƒëŒ€ì˜ ë¡œê·¸ì¸ ëŒ€ê¸°
+        Countdown, // ì¹´ìš´íŠ¸ë‹¤ìš´ ì‹œì‘
+        Action, // (ê²Œì„ ì‹œì‘) ê³µê²©/íšŒí”¼ ì„ íƒ, ìˆ˜ì‹  ëŒ€ê¸°
+        EndAction, // ê³µê²©/íšŒí”¼ ì—°ì¶œ
+        Result, // ê²°ê³¼ ë°œí‘œ
+        EndGame, // ë
+        Disconnect, // ì˜¤ë¥˜ (ì—°ê²° ì•ˆ ë¨)
     }
 
 
-    // Start is called before the first frame update (Initialize¿ë)
+    // Start is called before the first frame update (Initializeìš©)
     void Start()
     {
         m_serverPlayer = null;
@@ -66,22 +66,22 @@ public class GamePlay : MonoBehaviour
         m_isSendAction = false;
         m_isReceiveAction = false;
 
-        // ÃÊ±âÈ­
+        // ì´ˆê¸°í™”
         for (int i = 0; i < m_inputData.Length; ++i)
         {
             m_inputData[i].attackInfo.actionKind = ActionKind.None;
             m_inputData[i].attackInfo.actionTime = 0.0f;
         }
 
-        // ¾ÆÁ÷ µ¿ÀÛ½ÃÅ°Áö ¾ÊÀ½
+        // ì•„ì§ ë™ì‘ì‹œí‚¤ì§€ ì•ŠìŒ
         m_gameState = GameState.None;
 
         for (int i = 0; i < m_hp.Length; ++i)
         {
-            m_hp[i] = 100; // Ã¼·Â¹Ù ¿ì¼± 100À¸·Î ÅëÀÏ
+            m_hp[i] = 100; // ì²´ë ¥ë°” ìš°ì„  100ìœ¼ë¡œ í†µì¼
         }
 
-        // Åë½Å ¸ğµâ ÀÛ¼º
+        // í†µì‹  ëª¨ë“ˆ ì‘ì„±
         GameObject go = new GameObject("Network");
         if (go != null)
         {
@@ -93,9 +93,9 @@ public class GamePlay : MonoBehaviour
             DontDestroyOnLoad(go);
         }
 
-        // È£½ºÆ®¸í °¡Á®¿À±â
+        // í˜¸ìŠ¤íŠ¸ëª… ê°€ì ¸ì˜¤ê¸°
         string hostname = Dns.GetHostName();
-        // È£½ºÆ®¸í¿¡¼­ IPÁÖ¼Ò¸¦ °¡Á®¿È
+        // í˜¸ìŠ¤íŠ¸ëª…ì—ì„œ IPì£¼ì†Œë¥¼ ê°€ì ¸ì˜´
         //IPAddress[] adrList = Dns.GetHostAddresses(hostname);
         IPHostEntry host = Dns.GetHostEntry(hostname);
         //m_serverAddress = adrList[0].ToString();
@@ -107,7 +107,7 @@ public class GamePlay : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        //Debug.Log(m_gameState); // ³ªÁß¿¡ ¾ø¾Ö±â
+        //Debug.Log(m_gameState); // ë‚˜ì¤‘ì— ì—†ì• ê¸°
 
         switch(m_gameState)
         {
@@ -157,66 +157,66 @@ public class GamePlay : MonoBehaviour
         float px = Screen.width * 0.5f - 100.0f;
         float py = Screen.height * 0.5f;
 
-        // ¹ÌÁ¢¼ÓÀÏ ¶§ÀÇ GUI Ç¥½Ã
+        // ë¯¸ì ‘ì†ì¼ ë•Œì˜ GUI í‘œì‹œ
         if (m_networkController == null)
         {
-            if (GUI.Button(new Rect(px, py, 200, 30), "´ëÀü »ó´ë¸¦ ±â´Ù¸³´Ï´Ù."))
+            if (GUI.Button(new Rect(px, py, 200, 30), "ëŒ€ì „ ìƒëŒ€ë¥¼ ê¸°ë‹¤ë¦½ë‹ˆë‹¤."))
             {
-                m_networkController = new NetworkController(); // ¼­¹ö
+                m_networkController = new NetworkController(); // ì„œë²„
                 m_playerId = 0;
                 m_gameState = GameState.Ready;
                 m_isGameOver = false;
 
-                // È£½ºÆ® ÇÃ·¹ÀÌ¾î »ı¼º
+                // í˜¸ìŠ¤íŠ¸ í”Œë ˆì´ì–´ ìƒì„±
                 m_serverPlayer = Instantiate(m_serverPlayerPrefab) as GameObject;
                 m_serverPlayer.name = m_serverPlayerPrefab.name;
 
-                GameObject.Find("Title").SetActive(false); // Å¸ÀÌÆ² Ç¥½Ã OFF
+                GameObject.Find("Title").SetActive(false); // íƒ€ì´í‹€ í‘œì‹œ OFF
 
-                Debug.Log("¼­¹ö »ı¼º, Á¢¼Ó");
+                Debug.Log("ì„œë²„ ìƒì„±, ì ‘ì†");
             }
 
-            // Å¬¶óÀÌ¾ğÆ®¸¦ ¼±ÅÃÇßÀ» ¶§ Á¢¼ÓÇÒ ¼­¹öÀÇ ÁÖ¼Ò ÀÔ·Â
+            // í´ë¼ì´ì–¸íŠ¸ë¥¼ ì„ íƒí–ˆì„ ë•Œ ì ‘ì†í•  ì„œë²„ì˜ ì£¼ì†Œ ì…ë ¥
             Rect labelRect = new Rect(px, py + 80, 200, 30);
             GUIStyle style = new GUIStyle();
             style.fontStyle = FontStyle.Bold;
             style.normal.textColor = Color.black;
-            GUI.Label(labelRect, "»ó´ë¹æ IP ÁÖ¼Ò", style);
+            GUI.Label(labelRect, "ìƒëŒ€ë°© IP ì£¼ì†Œ", style);
             m_serverAddress = GUI.TextField(new Rect(px, py + 95, 200, 30), m_serverAddress);
 
-            if (GUI.Button(new Rect(px, py + 40, 200, 30), "´ëÀü »ó´ë¿Í Á¢¼ÓÇÕ´Ï´Ù"))
+            if (GUI.Button(new Rect(px, py + 40, 200, 30), "ëŒ€ì „ ìƒëŒ€ì™€ ì ‘ì†í•©ë‹ˆë‹¤"))
             {
-                m_networkController = new NetworkController(m_serverAddress); // ¼­¹ö
+                m_networkController = new NetworkController(m_serverAddress); // ì„œë²„
                 m_playerId = 1;
                 m_gameState = GameState.Ready;
                 m_isGameOver = false;
 
-                // Å¬¶óÀÌ¾ğÆ® ÇÃ·¹ÀÌ¾î »ı¼º
+                // í´ë¼ì´ì–¸íŠ¸ í”Œë ˆì´ì–´ ìƒì„±
                 m_clientPlayer = Instantiate(m_clientPlayerPrefab) as GameObject;
                 m_clientPlayer.name = m_clientPlayerPrefab.name;
 
                 GameObject.Find("Title").SetActive(false);
 
-                Debug.Log("Å¬¶óÀÌ¾ğÆ® Á¢¼Ó");
+                Debug.Log("í´ë¼ì´ì–¸íŠ¸ ì ‘ì†");
             }
         }
     }
 
 
-    // ·Î±×ÀÎ ´ë±â
+    // ë¡œê·¸ì¸ ëŒ€ê¸°
     void UpdateReady()
     {
-        // Á¢¼Ó È®ÀÎ
+        // ì ‘ì† í™•ì¸
         if (m_networkController.IsConnected() == false)
         {
-            return; // Á¢¼Ó »óÅÂ ¾Æ´Ï¸é Á¾·á
+            return; // ì ‘ì† ìƒíƒœ ì•„ë‹ˆë©´ ì¢…ë£Œ
         }
 
-        // ÇÃ·¹ÀÌ¾î Ä³¸¯ÅÍ°¡ ¸¸µé¾îÁöÁö ¾Ê¾ÒÀ¸¸é »ı¼ºÇÔ
+        // í”Œë ˆì´ì–´ ìºë¦­í„°ê°€ ë§Œë“¤ì–´ì§€ì§€ ì•Šì•˜ìœ¼ë©´ ìƒì„±í•¨
         if (m_serverPlayer == null)
         {
             m_serverPlayer = Instantiate(m_serverPlayerPrefab) as GameObject;
-            // Instantiate as GameObject ¼³¸í: https://codingmania.tistory.com/248
+            // Instantiate as GameObject ì„¤ëª…: https://codingmania.tistory.com/248
             m_serverPlayer.name = m_serverPlayerPrefab.name;
         }
         if (m_clientPlayer == null)
@@ -225,7 +225,7 @@ public class GamePlay : MonoBehaviour
             m_clientPlayer.name = m_clientPlayerPrefab.name;
         }
 
-        // ¸ğ¼ÇÀÌ IdleÀÌ µÉ ¶§±îÁö ´ë±â
+        // ëª¨ì…˜ì´ Idleì´ ë  ë•Œê¹Œì§€ ëŒ€ê¸°
         if (m_serverPlayer.GetComponent<Player>().IsIdleAnimation() == false)
         {
             return;
@@ -235,22 +235,22 @@ public class GamePlay : MonoBehaviour
             return;
         }
 
-        // ´ë±â Åë°ú ÈÄ ´ÙÀ½ »óÅÂ(Ä«¿îÆ®´Ù¿î)·Î.
+        // ëŒ€ê¸° í†µê³¼ í›„ ë‹¤ìŒ ìƒíƒœ(ì¹´ìš´íŠ¸ë‹¤ìš´)ë¡œ.
         m_gameState = GameState.Countdown;
     }
 
 
-    // °ÔÀÓ ½ÃÀÛ Àü Ä«¿îÆ®´Ù¿î
+    // ê²Œì„ ì‹œì‘ ì „ ì¹´ìš´íŠ¸ë‹¤ìš´
     void UpdateCountdown()
     {
         GameObject countObj = GameObject.Find("CountdownObject");
         if (countObj == null) 
         {
-            // ¿¬Ãâ¿ë ¿ÀºêÁ§Æ®°¡ ¾ø´Ù¸é »ı¼º. ÃÊ±â µ¿ÀÛÀÓ
+            // ì—°ì¶œìš© ì˜¤ë¸Œì íŠ¸ê°€ ì—†ë‹¤ë©´ ìƒì„±. ì´ˆê¸° ë™ì‘ì„
             countObj = Instantiate(m_CountdownObject) as GameObject;
             countObj.name = "CountdownObject";
             Time.timeScale = 0f;
-            StartCoroutine("StartCountdown", countObj); // Ä«¿îÆ®´Ù¿î ÄÚ·çÆ¾ È£Ãâ
+            StartCoroutine("StartCountdown", countObj); // ì¹´ìš´íŠ¸ë‹¤ìš´ ì½”ë£¨í‹´ í˜¸ì¶œ
             return;
         }
     }
@@ -268,75 +268,75 @@ public class GamePlay : MonoBehaviour
         yield return new WaitForSecondsRealtime(1.5f);
         countObj.SetActive(false);
 
-        Time.timeScale = 1f; // °ÔÀÓ ½ÃÀÛ
+        Time.timeScale = 1f; // ê²Œì„ ì‹œì‘
         m_gameState = GameState.Action;
     }
 
 
-    // °ø°İ/È¸ÇÇ ¼±ÅÃ(½ÇÇà)
+    // ê³µê²©/íšŒí”¼ ì„ íƒ(ì‹¤í–‰)
     void UpdateAction()
     {
 
     }
 
-    // »ó´ë¹æÀÇ °ø°İ/È¸ÇÇ Åë½Å ´ë±â
+    // ìƒëŒ€ë°©ì˜ ê³µê²©/íšŒí”¼ í†µì‹  ëŒ€ê¸°
     void UpdateWaitAction()
     {
-        // ¼ö½Å´ë±â
+        // ìˆ˜ì‹ ëŒ€ê¸°
     }
 
 
-    // Ã¼·Â¹Ù ¹İ¿µ
+    // ì²´ë ¥ë°” ë°˜ì˜
     void UpdateHP()
     {
 
     }
 
 
-    // °ÔÀÓ Á¾·á
+    // ê²Œì„ ì¢…ë£Œ
     void UpdateEndGame()
     {
 
     }
 
 
-    // °ÔÀÓ Á¾·á ½Ã È­¸é
+    // ê²Œì„ ì¢…ë£Œ ì‹œ í™”ë©´
     void OnGUIEndGame()
     {
 
     }
 
 
-    // °ÔÀÓ Á¾·á Ã¼Å©
+    // ê²Œì„ ì¢…ë£Œ ì²´í¬
     public bool IsGameOver()
     {
         return m_isGameOver;
     }
 
 
-    // °ÔÀÓ °á°ú Ç¥½Ã
+    // ê²Œì„ ê²°ê³¼ í‘œì‹œ
     void UpdateResult()
     {
 
     }
 
 
-    // ÀÌº¥Æ® ¹ß»ı ½Ã Äİ¹é ÇÔ¼ö
+    // ì´ë²¤íŠ¸ ë°œìƒ ì‹œ ì½œë°± í•¨ìˆ˜
     public void EventCallback(NetEventState state)
     {
         switch (state.type)
         {
-            case NetEventType.Disconnect: // ¿¬°áÀÌ ²÷¾îÁø ÀÌº¥Æ®°¡ µé¾î¿À¸é
+            case NetEventType.Disconnect: // ì—°ê²°ì´ ëŠì–´ì§„ ì´ë²¤íŠ¸ê°€ ë“¤ì–´ì˜¤ë©´
                 if (m_gameState < GameState.EndGame && m_isGameOver == false)
                 {
-                    m_gameState = GameState.Disconnect; // °ÔÀÓ »óÅÂ¸¦ Diconnect·Î º¯°æ
+                    m_gameState = GameState.Disconnect; // ê²Œì„ ìƒíƒœë¥¼ Diconnectë¡œ ë³€ê²½
                 }
                 break;
         }
     }
 
 
-    // ¿¬°á ²÷±è ¾Ë¸²
+    // ì—°ê²° ëŠê¹€ ì•Œë¦¼
     void NotifyDisconnection()
     {
 
