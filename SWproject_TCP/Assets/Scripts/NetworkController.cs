@@ -1,4 +1,4 @@
-using System.Collections;
+ï»¿using System.Collections;
 using System.Net;
 using System;
 using UnityEngine;
@@ -6,10 +6,10 @@ using UnityEngine;
 public class NetworkController
 {
     const int USE_PORT = 50765;
-    TransportTCP m_network; // ÀÚÁÖ »ç¿ëÇÏ¹Ç·Î ¸¸µé¾îµÒ
+    TransportTCP m_network; // ìì£¼ ì‚¬ìš©í•˜ë¯€ë¡œ ë§Œë“¤ì–´ë‘ 
 
 
-    // ¼­¹ö Å¬¶óÀÌ¾ğÆ® ÆÇÁ¤¿ë
+    // ì„œë²„ í´ë¼ì´ì–¸íŠ¸ íŒì •ìš©
     public enum HostType
     {
         Server,
@@ -18,7 +18,7 @@ public class NetworkController
     HostType m_hostType;
 
 
-    // ¼­¹ö¿¡¼­ »ç¿ëÇÒ ¶§
+    // ì„œë²„ì—ì„œ ì‚¬ìš©í•  ë•Œ
     public NetworkController()
     {
         m_hostType = HostType.Server;
@@ -28,7 +28,7 @@ public class NetworkController
         m_network.StartServer(USE_PORT, 1);
     }
 
-    // Å¬¶óÀÌ¾ğÆ®¿¡¼­ »ç¿ëÇÒ ¶§
+    // í´ë¼ì´ì–¸íŠ¸ì—ì„œ ì‚¬ìš©í•  ë•Œ
     public NetworkController(string serverAddress)
     {
         m_hostType = HostType.Client;
@@ -39,59 +39,59 @@ public class NetworkController
     }
 
 
-    // ³×Æ®¿öÅ© »óÅÂ È¹µæ
+    // ë„¤íŠ¸ì›Œí¬ ìƒíƒœ íšë“
     public bool IsConnected()
     {
         return m_network.IsConnected();
     }
 
-    // È£½ºÆ® Å¸ÀÔ È¹µæ
+    // í˜¸ìŠ¤íŠ¸ íƒ€ì… íšë“
     public HostType GetHostType()
     {
         return m_hostType;
     }
 
 
-    // ¾×¼Ç ¼Û½Å
+    // ì•¡ì…˜ ì†¡ì‹ 
     public void SendActionData(ActionKind actionKind, float actionTime)
     {
-        // ±¸Á¶Ã¼¸¦ byte ¹è¿­·Î º¯È¯
+        // êµ¬ì¡°ì²´ë¥¼ byte ë°°ì—´ë¡œ ë³€í™˜
         byte[] data = new byte[3];
         data[0] = (byte)actionKind;
 
-        // Á¤¼öÈ­
+        // ì •ìˆ˜í™”
         short actTime = (short)(actionTime * 1000.0f);
-        // ³×Æ®¿öÅ© ¹ÙÀÌÆ®¿À´õ·Î º¯È¯
+        // ë„¤íŠ¸ì›Œí¬ ë°”ì´íŠ¸ì˜¤ë”ë¡œ ë³€í™˜
         short netOrder = IPAddress.HostToNetworkOrder(actTime);
-        // byte[] ÇüÀ¸·Î º¯È¯
+        // byte[] í˜•ìœ¼ë¡œ ë³€í™˜
         byte[] conv = BitConverter.GetBytes(netOrder);
         data[1] = conv[0];
         data[2] = conv[1];
 
-        // µ¥ÀÌÅÍ ¼Û½Å
+        // ë°ì´í„° ì†¡ì‹ 
         m_network.Send(data, data.Length);
     }
 
-    // ¾×¼Ç ¼ö½Å
+    // ì•¡ì…˜ ìˆ˜ì‹ 
     public bool ReceiveActionData(ref ActionKind actionKind, ref float actionTime)
     {
         byte[] data = new byte[1024];
 
-        // µ¥ÀÌÅÍ ¼ö½Å
+        // ë°ì´í„° ìˆ˜ì‹ 
         int recvSize = m_network.Receive(ref data, data.Length);
         if (recvSize < 0)
         {
-            // ÀÔ·Â Á¤º¸¸¦ ¼ö½ÅÇÏÁö ¾ÊÀº °æ¿ì
+            // ì…ë ¥ ì •ë³´ë¥¼ ìˆ˜ì‹ í•˜ì§€ ì•Šì€ ê²½ìš°
             return false;
         }
 
-        // byte ¹è¿­À» ±¸Á¶Ã¼·Î º¯È¯
+        // byte ë°°ì—´ì„ êµ¬ì¡°ì²´ë¡œ ë³€í™˜
         actionKind = (ActionKind)data[0];
-        // byte[] Çü¿¡¼­ short ÇüÀ¸·Î º¯È¯
+        // byte[] í˜•ì—ì„œ short í˜•ìœ¼ë¡œ ë³€í™˜
         short netOrder = (short)BitConverter.ToUInt16(data, 1);
-        // È£½ºÆ® ¹ÙÀÌÆ®¿À´õ·Î º¯È¯
+        // í˜¸ìŠ¤íŠ¸ ë°”ì´íŠ¸ì˜¤ë”ë¡œ ë³€í™˜
         short hostOrder = IPAddress.NetworkToHostOrder(netOrder);
-        // float ´ÜÀ§ ½Ã°£À¸·Î µÇµ¹¸²
+        // float ë‹¨ìœ„ ì‹œê°„ìœ¼ë¡œ ë˜ëŒë¦¼
         actionTime = hostOrder / 1000.0f;
 
         return true;

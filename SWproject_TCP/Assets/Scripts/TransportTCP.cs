@@ -1,4 +1,4 @@
-using System.Collections;
+ï»¿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using System;
@@ -8,58 +8,58 @@ using System.Threading;
 
 public class TransportTCP : MonoBehaviour
 {
-    // ¸®½º´× ¼ÒÄÏ
+    // ë¦¬ìŠ¤ë‹ ì†Œì¼“
     private Socket m_listener = null;
 
-    // Å¬¶óÀÌ¾ğÆ®¿ÍÀÇ Á¢¼Ó¿ë ¼ÒÄÏ
+    // í´ë¼ì´ì–¸íŠ¸ì™€ì˜ ì ‘ì†ìš© ì†Œì¼“
     private Socket m_socket = null;
 
-    // ¼Û½Å ¹öÆÛ
+    // ì†¡ì‹  ë²„í¼
     private PacketQueue m_sendQueue;
 
-    // ¼ö½Å ¹öÆÛ
+    // ìˆ˜ì‹  ë²„í¼
     private PacketQueue m_recvQueue;
 
-    // ¼­¹ö ÇÃ·¡±×
+    // ì„œë²„ í”Œë˜ê·¸
     private bool m_isServer = false;
 
-    // Á¢¼Ó ÇÃ·¡±×
+    // ì ‘ì† í”Œë˜ê·¸
     private bool m_isConnected = false;
 
-    /* ÀÌº¥Æ® °ü·Ã ¸â¹ö º¯¼ö */
-    // ÀÌº¥Æ® ÅëÁö µ¨¸®°ÔÀÌÆ®
-    public delegate void EventHandler(NetEventState state); // NetworkDef.cs¿¡¼­ Á¤ÀÇ
+    /* ì´ë²¤íŠ¸ ê´€ë ¨ ë©¤ë²„ ë³€ìˆ˜ */
+    // ì´ë²¤íŠ¸ í†µì§€ ë¸ë¦¬ê²Œì´íŠ¸
+    public delegate void EventHandler(NetEventState state); // NetworkDef.csì—ì„œ ì •ì˜
     private EventHandler m_handler;
 
-    /* ½º·¹µå °ü·Ã ¸â¹ö º¯¼ö */
-    // ½º·¹µå ½ÇÇà ÇÃ·¡±×
+    /* ìŠ¤ë ˆë“œ ê´€ë ¨ ë©¤ë²„ ë³€ìˆ˜ */
+    // ìŠ¤ë ˆë“œ ì‹¤í–‰ í”Œë˜ê·¸
     protected bool m_threadLoop = false;
     protected Thread m_thread = null;
-    private static int s_mtu = 1400; // ¹Ş¾ÆµéÀÏ ¼ö ÀÖ´Â ÃÖ´ë µ¥ÀÌÅÍ ÆĞÅ¶ Å©Å°
+    private static int s_mtu = 1400; // ë°›ì•„ë“¤ì¼ ìˆ˜ ìˆëŠ” ìµœëŒ€ ë°ì´í„° íŒ¨í‚· í¬í‚¤
 
     // for initialize
     void Start()
     {
-        // ¼Û¼ö½Å ¹öÆÛ ÀÛ¼º
+        // ì†¡ìˆ˜ì‹  ë²„í¼ ì‘ì„±
         m_sendQueue = new PacketQueue();
         m_recvQueue = new PacketQueue();
     }
 
-    // ´ë±â ½ÃÀÛ
+    // ëŒ€ê¸° ì‹œì‘
     public bool StartServer(int port, int connectionNum)
     {
         Debug.Log("StartServer called.!");
 
-        // ¸®½º´× ¼ÒÄÏ »ı¼º
+        // ë¦¬ìŠ¤ë‹ ì†Œì¼“ ìƒì„±
         try
         {
-            // ¼ÒÄÏ »ı¼º
+            // ì†Œì¼“ ìƒì„±
             m_listener = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
 
-            // »ç¿ëÇÒ Æ÷Æ® ¹øÈ£ ÇÒ´ç (¹ÙÀÎµå)
+            // ì‚¬ìš©í•  í¬íŠ¸ ë²ˆí˜¸ í• ë‹¹ (ë°”ì¸ë“œ)
             m_listener.Bind(new IPEndPoint(IPAddress.Any, port));
 
-            // ´ë±â
+            // ëŒ€ê¸°
             m_listener.Listen(connectionNum);
         }
         catch
@@ -74,13 +74,13 @@ public class TransportTCP : MonoBehaviour
     }
 
 
-    // ´ë±â Á¾·á
+    // ëŒ€ê¸° ì¢…ë£Œ
     public void StopServer()
     {
         m_threadLoop = false;
         if (m_thread != null)
         {
-            m_thread.Join(); // ´Ù¸¥ ½º·¹µå°¡ Á¾·áµÉ ¶§±îÁö ±â´Ù¸²
+            m_thread.Join(); // ë‹¤ë¥¸ ìŠ¤ë ˆë“œê°€ ì¢…ë£Œë  ë•Œê¹Œì§€ ê¸°ë‹¤ë¦¼
             m_thread = null;
         }
 
@@ -88,7 +88,7 @@ public class TransportTCP : MonoBehaviour
 
         if (m_listener != null)
         {
-            m_listener.Close(); // ¼ÒÄÏ ´İ±â
+            m_listener.Close(); // ì†Œì¼“ ë‹«ê¸°
             m_listener = null;
         }
 
@@ -98,12 +98,12 @@ public class TransportTCP : MonoBehaviour
     }
 
 
-    // Á¢¼Ó (ip ÁÖ¼Ò¿Í Æ÷Æ® ¹øÈ£·Î ¼ÒÄÏ ¿¬°á)
+    // ì ‘ì† (ip ì£¼ì†Œì™€ í¬íŠ¸ ë²ˆí˜¸ë¡œ ì†Œì¼“ ì—°ê²°)
     public bool Connect(string address, int port)
     {
         Debug.Log("TransportTCP connect called.");
 
-        if (m_listener != null) // ÀÌ¹Ì ¼ÒÄÏÀÌ ¿¬°áµÇ¾î ÀÖÀ½
+        if (m_listener != null) // ì´ë¯¸ ì†Œì¼“ì´ ì—°ê²°ë˜ì–´ ìˆìŒ
         {
             return false;
         }
@@ -138,7 +138,7 @@ public class TransportTCP : MonoBehaviour
 
         if (m_handler != null)
         {
-            // Á¢¼Ó °á°ú¸¦ ÅëÁö
+            // ì ‘ì† ê²°ê³¼ë¥¼ í†µì§€
             NetEventState state = new NetEventState();
             state.type = NetEventType.Connect;
             state.result = (m_isConnected == true) ? NetEventResult.Success : NetEventResult.Failure;
@@ -151,19 +151,19 @@ public class TransportTCP : MonoBehaviour
     }
 
 
-    // Á¢¼Ó Á¾·á (¼ÒÄÏ ´İ±â)
+    // ì ‘ì† ì¢…ë£Œ (ì†Œì¼“ ë‹«ê¸°)
     public void Disconnect()
     {
         m_isConnected = false;
 
         if (m_socket != null)
         {
-            // ¼ÒÄÏ ´İ±â
+            // ì†Œì¼“ ë‹«ê¸°
             m_socket.Shutdown(SocketShutdown.Both);
             m_socket.Close();
             m_socket = null;
 
-            // Á¢¼Ó Á¾·á¸¦ ÅëÁö
+            // ì ‘ì† ì¢…ë£Œë¥¼ í†µì§€
             if (m_handler != null)
             {
                 NetEventState state = new NetEventState();
@@ -175,7 +175,7 @@ public class TransportTCP : MonoBehaviour
     }
 
 
-    // ¼Û½Å Ã³¸®
+    // ì†¡ì‹  ì²˜ë¦¬
     public int Send(byte[] data, int size)
     {
         if (m_sendQueue == null)
@@ -187,7 +187,7 @@ public class TransportTCP : MonoBehaviour
     }
 
 
-    // ¼ö½Å Ã³¸®
+    // ìˆ˜ì‹  ì²˜ë¦¬
     public int Receive(ref byte[] buffer, int size)
     {
         if (m_recvQueue == null)
@@ -199,14 +199,14 @@ public class TransportTCP : MonoBehaviour
     }
 
 
-    // ÀÌº¥Æ® ÅëÁö ÇÔ¼ö µî·Ï
+    // ì´ë²¤íŠ¸ í†µì§€ í•¨ìˆ˜ ë“±ë¡
     public void RegiserEventHandler(EventHandler handler)
     {
         m_handler += handler;
     }
 
     
-    // ÀÌº¥Æ® ÅëÁö ÇÔ¼ö »èÁ¦
+    // ì´ë²¤íŠ¸ í†µì§€ í•¨ìˆ˜ ì‚­ì œ
     public void UnregisterEventHandler(EventHandler handler)
     {
         m_handler -= handler;
@@ -214,12 +214,12 @@ public class TransportTCP : MonoBehaviour
 
 
     //
-    // ½º·¹µå ½ÃÀÛ ÇÔ¼ö
+    // ìŠ¤ë ˆë“œ ì‹œì‘ í•¨ìˆ˜
     bool LaunchThread()
     {
         try
         {
-            // Dispatch¿ë ½º·¹µå ½ÃÀÛ
+            // Dispatchìš© ìŠ¤ë ˆë“œ ì‹œì‘
             m_threadLoop = true;
             m_thread = new Thread(new ThreadStart(Dispatch));
             m_thread.Start();
@@ -235,23 +235,23 @@ public class TransportTCP : MonoBehaviour
     }
 
 
-    // ½º·¹µå Ãø ¼Û¼ö½Å Ã³¸®
+    // ìŠ¤ë ˆë“œ ì¸¡ ì†¡ìˆ˜ì‹  ì²˜ë¦¬
     public void Dispatch()
     {
         Debug.Log("Dispatch thread started.");
 
         while (m_threadLoop)
         {
-            // Å¬¶óÀÌ¾ğÆ®ÀÇ Á¢¼ÓÀ» ±â´Ù¸²
+            // í´ë¼ì´ì–¸íŠ¸ì˜ ì ‘ì†ì„ ê¸°ë‹¤ë¦¼
             AcceptClient();
 
-            // Å¬¶óÀÌ¾ğÆ®¿Í ¼Û¼ö½ÅÇÔ
+            // í´ë¼ì´ì–¸íŠ¸ì™€ ì†¡ìˆ˜ì‹ í•¨
             if (m_socket != null && m_isConnected == true)
             {
-                // ¼Û½Å Ã³¸®
+                // ì†¡ì‹  ì²˜ë¦¬
                 DispatchSend();
 
-                // ¼ö½Å Ã³¸®
+                // ìˆ˜ì‹  ì²˜ë¦¬
                 DispatchReceive();
             }
 
@@ -262,14 +262,14 @@ public class TransportTCP : MonoBehaviour
     }
 
 
-    // Å¬¶óÀÌ¾ğÆ®¿ÍÀÇ Á¢¼Ó
+    // í´ë¼ì´ì–¸íŠ¸ì™€ì˜ ì ‘ì†
     void AcceptClient()
     {
         if (m_listener != null && m_listener.Poll(0, SelectMode.SelectRead))
         {
-            // Poll ÇÔ¼ö¿¡ ´ëÇØ: https://reakwon.tistory.com/219
+            // Poll í•¨ìˆ˜ì— ëŒ€í•´: https://reakwon.tistory.com/219
 
-            // Å¬¶óÀÌ¾ğÆ®¿¡¼­ Á¢¼ÓµÊ
+            // í´ë¼ì´ì–¸íŠ¸ì—ì„œ ì ‘ì†ë¨
             m_socket = m_listener.Accept();
             m_isConnected = true;
             if (m_handler != null)
@@ -285,20 +285,20 @@ public class TransportTCP : MonoBehaviour
     }
 
 
-    // ½º·¹µå Ãø ¼Û½Å Ã³¸®
+    // ìŠ¤ë ˆë“œ ì¸¡ ì†¡ì‹  ì²˜ë¦¬
     void DispatchSend()
     {
         try
         {
-            // ¼Û½Å Ã³¸®
+            // ì†¡ì‹  ì²˜ë¦¬
             if (m_socket.Poll(0, SelectMode.SelectWrite))
             {
                 byte[] buffer = new byte[s_mtu];
-                // sendQueue¿¡¼­ µ¥ÀÌÅÍ¸¦ ¹Ş¾Æ¿Í buffer¿¡ ³Ö°í
+                // sendQueueì—ì„œ ë°ì´í„°ë¥¼ ë°›ì•„ì™€ bufferì— ë„£ê³ 
                 int sendSize = m_sendQueue.Dequeue(ref buffer, buffer.Length);
 
                 while (sendSize > 0)
-                { // bufferÀÇ µ¥ÀÌÅÍ¸¦ ¼ÒÄÏ¿¡ ´ã¾Æ sendÇÑ´Ù
+                { // bufferì˜ ë°ì´í„°ë¥¼ ì†Œì¼“ì— ë‹´ì•„ sendí•œë‹¤
                     m_socket.Send(buffer, sendSize, SocketFlags.None);
                     sendSize = m_sendQueue.Dequeue(ref buffer, buffer.Length);
                 }
@@ -311,26 +311,26 @@ public class TransportTCP : MonoBehaviour
     }
 
 
-    // ½º·¹µå Ãø ¼ö½Å Ã³¸®
+    // ìŠ¤ë ˆë“œ ì¸¡ ìˆ˜ì‹  ì²˜ë¦¬
     void DispatchReceive()
     {
-        // ¼ö½Å Ã³¸®
+        // ìˆ˜ì‹  ì²˜ë¦¬
         try
         {
             while (m_socket.Poll(0, SelectMode.SelectRead))
             {
                 byte[] buffer = new byte[s_mtu];
-                // ¼ÒÄÏ¿¡¼­ µ¥ÀÌÅÍ¸¦ ¹Ş¾Æ buffer¿¡ ³Ö°í
+                // ì†Œì¼“ì—ì„œ ë°ì´í„°ë¥¼ ë°›ì•„ bufferì— ë„£ê³ 
                 int recvSize = m_socket.Receive(buffer, buffer.Length, SocketFlags.None);
                 if (recvSize == 0)
-                { // ¹Ş¾Æ¿Â µ¥ÀÌÅÍ°¡ ¾øÀ¸¸é
-                    // Á¢¼Ó Á¾·á
+                { // ë°›ì•„ì˜¨ ë°ì´í„°ê°€ ì—†ìœ¼ë©´
+                    // ì ‘ì† ì¢…ë£Œ
                     Debug.Log("Disconnect recv from client.");
                     Disconnect();
                 }
                 else if (recvSize > 0)
-                { // ¹Ş¾Æ¿Â µ¥ÀÌÅÍ°¡ ÀÖÀ¸¸é
-                    // bufferÀÇ µ¥ÀÌÅÍ¸¦ recvQueue¿¡ ´ã´Â´Ù
+                { // ë°›ì•„ì˜¨ ë°ì´í„°ê°€ ìˆìœ¼ë©´
+                    // bufferì˜ ë°ì´í„°ë¥¼ recvQueueì— ë‹´ëŠ”ë‹¤
                     m_recvQueue.Enqueue(buffer, recvSize);
                 }
             }
@@ -342,14 +342,14 @@ public class TransportTCP : MonoBehaviour
     }
 
 
-    // ¼­¹öÀÎÁö È®ÀÎ
+    // ì„œë²„ì¸ì§€ í™•ì¸
     public bool IsServer()
     {
         return m_isServer;
     }
 
 
-    // Á¢¼Ó È®ÀÎ
+    // ì ‘ì† í™•ì¸
     public bool IsConnected()
     {
         return m_isConnected;
