@@ -11,7 +11,8 @@ public class GamePlay : MonoBehaviour
     public GameObject m_serverPlayerPrefab; // 서버 측 플레이어 캐릭터
     public GameObject m_clientPlayerPrefab; // 클라이언트 측 플레이어 캐릭터
 
-    public GameObject m_CountdownObject; // 카운트다운 표시 이미지 모음
+    //public GameObject m_CountdownObject; // 카운트다운 표시 이미지 모음
+    public TextMeshProUGUI m_countdownText;
 
     public GameObject m_damageTextPrefab; // 데미지 표시
 
@@ -39,7 +40,8 @@ public class GamePlay : MonoBehaviour
     bool m_isReceiveAction;
 
     // 카운트다운용
-    private float startTime;
+    private int time;
+    private int curTime;
 
 
     // 게임 진행 상황
@@ -226,6 +228,7 @@ public class GamePlay : MonoBehaviour
         }
 
         // 모션이 Idle이 될 때까지 대기
+        /*
         if (m_serverPlayer.GetComponent<Player>().IsIdleAnimation() == false)
         {
             return;
@@ -234,6 +237,8 @@ public class GamePlay : MonoBehaviour
         {
             return;
         }
+        Player.cs에서 모션 다루는 거 수정하고 주석 해제하기
+        */
 
         // 대기 통과 후 다음 상태(카운트다운)로.
         m_gameState = GameState.Countdown;
@@ -243,33 +248,39 @@ public class GamePlay : MonoBehaviour
     // 게임 시작 전 카운트다운
     void UpdateCountdown()
     {
-        GameObject countObj = GameObject.Find("CountdownObject");
-        if (countObj == null) 
+        time = 3;
+        StartCoroutine(StartCountdown()); // 카운트다운 코루틴 호출
+        Invoke("CountdownStop", 7.5f); // 7.5초 뒤 코루틴 종료
+        return;
+    }
+    
+
+    // 카운트다운 띄우는 코루틴
+    private IEnumerator StartCountdown()
+    {
+        curTime = time;
+        yield return new WaitForSeconds(1f);
+        // 이거 다 WaitForSecondsRealtime(1f);로 했을 때 버벅임이 더 심한데...
+        // 실제 다른 사람과 접속해서 창 바로바로 보고 있을 때도 그런지 테스트해보아야함
+
+        while (curTime > 0)
         {
-            // 연출용 오브젝트가 없다면 생성. 초기 동작임
-            countObj = Instantiate(m_CountdownObject) as GameObject;
-            countObj.name = "CountdownObject";
-            Time.timeScale = 0f;
-            StartCoroutine("StartCountdown", countObj); // 카운트다운 코루틴 호출
-            return;
+            m_countdownText.text = curTime.ToString();
+            yield return new WaitForSeconds(1.5f);
+            curTime--;
         }
+
+        curTime = 0;
+        m_countdownText.text = "Game Start!";
+        yield return new WaitForSeconds(1.0f);
+        //yield break;
+
     }
 
-    private IEnumerable StartCountdown(GameObject countObj)
+    void CountdownStop()
     {
-        countObj.GetComponent<TextMeshPro>().text = "3";
-        startTime = Time.realtimeSinceStartup;
-        yield return new WaitForSecondsRealtime(1.5f);
-        countObj.GetComponent<TextMeshPro>().text = "2";
-        yield return new WaitForSecondsRealtime(1.5f);
-        countObj.GetComponent<TextMeshPro>().text = "1";
-        yield return new WaitForSecondsRealtime(1.5f);
-        countObj.GetComponent<TextMeshPro>().text = "Start!";
-        yield return new WaitForSecondsRealtime(1.5f);
-        countObj.SetActive(false);
-
-        Time.timeScale = 1f; // 게임 시작
-        m_gameState = GameState.Action;
+        Debug.Log("카운트다운 코루틴 종료");
+        StopCoroutine(StartCountdown());
     }
 
 

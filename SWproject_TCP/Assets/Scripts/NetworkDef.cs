@@ -1,25 +1,25 @@
-using System.Collections;
+ï»¿using System.Collections;
 using UnityEngine;
 
-// ÀÌº¥Æ® Á¾·ù
+// ì´ë²¤íŠ¸ ì¢…ë¥˜
 public enum NetEventType
 {
-    Connect = 0,    // Á¢¼Ó ÀÌº¥Æ®
-    Disconnect,     // ²÷±è ÀÌº¥Æ®
-    SendError,      // ¼Û½Å ¿À·ù
-    ReceiveError,   // ¼ö½Å ¿À·ù
+    Connect = 0,    // ì ‘ì† ì´ë²¤íŠ¸
+    Disconnect,     // ëŠê¹€ ì´ë²¤íŠ¸
+    SendError,      // ì†¡ì‹  ì˜¤ë¥˜
+    ReceiveError,   // ìˆ˜ì‹  ì˜¤ë¥˜
 }
 
-// ÀÌº¥Æ® °æ°ú
+// ì´ë²¤íŠ¸ ê²½ê³¼
 public enum NetEventResult
 {
-    Failure = -1,   // ½ÇÆĞ
-    Success = 0,    // ¼º°ø
+    Failure = -1,   // ì‹¤íŒ¨
+    Success = 0,    // ì„±ê³µ
 }
 
-// ÀÌº¥Æ® »óÅÂ ÅëÁö
+// ì´ë²¤íŠ¸ ìƒíƒœ í†µì§€
 public class NetEventState
 {
-    public NetEventType type;       // ÀÌº¥Æ® Å¸ÀÔ
-    public NetEventResult result;   // ÀÌº¥Æ® °á°ú
+    public NetEventType type;       // ì´ë²¤íŠ¸ íƒ€ì…
+    public NetEventResult result;   // ì´ë²¤íŠ¸ ê²°ê³¼
 }
