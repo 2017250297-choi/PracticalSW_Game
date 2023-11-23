@@ -6,6 +6,7 @@ using System.Net;
 using TMPro;
 using System.Linq;
 
+
 public class GamePlay : MonoBehaviour
 {
     public GameObject m_serverPlayerPrefab; // 서버 측 플레이어 캐릭터
@@ -40,10 +41,8 @@ public class GamePlay : MonoBehaviour
     bool m_isReceiveAction;
 
     // 카운트다운용
-    private float time;
-    private float curTime;
     bool m_isCountdown;
-    IEnumerator m_startCountdownCoroutine;
+    //IEnumerator m_startCountdownCoroutine;
 
 
     // 게임 진행 상황
@@ -69,8 +68,7 @@ public class GamePlay : MonoBehaviour
         m_timer = 0;
         m_isSendAction = false;
         m_isReceiveAction = false;
-
-        time = 5.0f;
+        m_isCountdown = false;
 
         // 초기화
         for (int i = 0; i < m_inputData.Length; ++i)
@@ -107,7 +105,7 @@ public class GamePlay : MonoBehaviour
         //m_serverAddress = adrList[0].ToString();
         m_serverAddress = host.AddressList.FirstOrDefault(a => a.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork).ToString();
 
-        m_startCountdownCoroutine = StartCountdown();
+        //m_startCountdownCoroutine = CountdownCoroutine();
     }
 
     // Update is called once per frame
@@ -129,7 +127,7 @@ public class GamePlay : MonoBehaviour
                 if (!m_isCountdown)
                 {
                     m_isCountdown = true;
-                    StartCoroutine(m_startCountdownCoroutine);
+                    StartCoroutine(CountdownCoroutine());
                 }
                 
                 break;
@@ -265,9 +263,10 @@ public class GamePlay : MonoBehaviour
 
 
     // 카운트다운 띄우는 코루틴
-    private IEnumerator StartCountdown()
+    private IEnumerator CountdownCoroutine()
     {
         yield return new WaitForSecondsRealtime(1f);
+        Time.timeScale = 0f; // 플레이어 멈춤
 
         m_countdownText.text = "3";
         yield return new WaitForSecondsRealtime(1.5f);
@@ -276,9 +275,11 @@ public class GamePlay : MonoBehaviour
         m_countdownText.text = "1";
         yield return new WaitForSecondsRealtime(1.5f);
         m_countdownText.text = "Start!";
+        Time.timeScale = 1f; // 플레이어 움직임 시작
+        m_gameState = GameState.Action; // 얘 위치를 마지막으로 빼야 하는지?
         yield return new WaitForSecondsRealtime(1.5f);
         m_countdownText.text = "";
-        m_gameState = GameState.Action;
+        
     }
 
 
