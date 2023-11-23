@@ -40,8 +40,10 @@ public class GamePlay : MonoBehaviour
     bool m_isReceiveAction;
 
     // 카운트다운용
-    private int time;
-    private int curTime;
+    private float time;
+    private float curTime;
+    bool m_isCountdown;
+    IEnumerator m_startCountdownCoroutine;
 
 
     // 게임 진행 상황
@@ -67,6 +69,8 @@ public class GamePlay : MonoBehaviour
         m_timer = 0;
         m_isSendAction = false;
         m_isReceiveAction = false;
+
+        time = 5.0f;
 
         // 초기화
         for (int i = 0; i < m_inputData.Length; ++i)
@@ -103,7 +107,7 @@ public class GamePlay : MonoBehaviour
         //m_serverAddress = adrList[0].ToString();
         m_serverAddress = host.AddressList.FirstOrDefault(a => a.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork).ToString();
 
-
+        m_startCountdownCoroutine = StartCountdown();
     }
 
     // Update is called once per frame
@@ -121,7 +125,13 @@ public class GamePlay : MonoBehaviour
                 break;
 
             case GameState.Countdown:
-                UpdateCountdown();
+                //UpdateCountdown();
+                if (!m_isCountdown)
+                {
+                    m_isCountdown = true;
+                    StartCoroutine(m_startCountdownCoroutine);
+                }
+                
                 break;
 
             case GameState.Action:
@@ -248,39 +258,27 @@ public class GamePlay : MonoBehaviour
     // 게임 시작 전 카운트다운
     void UpdateCountdown()
     {
-        time = 3;
-        StartCoroutine(StartCountdown()); // 카운트다운 코루틴 호출
-        Invoke("CountdownStop", 7.5f); // 7.5초 뒤 코루틴 종료
-        return;
+        //StartCoroutine(StartCountdown()); // 카운트다운 코루틴 호출
+        //Invoke("CountdownStop", 7.5f); // 7.5초 뒤 코루틴 종료
+        //return;
     }
-    
+
 
     // 카운트다운 띄우는 코루틴
     private IEnumerator StartCountdown()
     {
-        curTime = time;
-        yield return new WaitForSeconds(1f);
-        // 이거 다 WaitForSecondsRealtime(1f);로 했을 때 버벅임이 더 심한데...
-        // 실제 다른 사람과 접속해서 창 바로바로 보고 있을 때도 그런지 테스트해보아야함
+        yield return new WaitForSecondsRealtime(1f);
 
-        while (curTime > 0)
-        {
-            m_countdownText.text = curTime.ToString();
-            yield return new WaitForSeconds(1.5f);
-            curTime--;
-        }
-
-        curTime = 0;
-        m_countdownText.text = "Game Start!";
-        yield return new WaitForSeconds(1.0f);
-        //yield break;
-
-    }
-
-    void CountdownStop()
-    {
-        Debug.Log("카운트다운 코루틴 종료");
-        StopCoroutine(StartCountdown());
+        m_countdownText.text = "3";
+        yield return new WaitForSecondsRealtime(1.5f);
+        m_countdownText.text = "2";
+        yield return new WaitForSecondsRealtime(1.5f);
+        m_countdownText.text = "1";
+        yield return new WaitForSecondsRealtime(1.5f);
+        m_countdownText.text = "Start!";
+        yield return new WaitForSecondsRealtime(1.5f);
+        m_countdownText.text = "";
+        m_gameState = GameState.Action;
     }
 
 
