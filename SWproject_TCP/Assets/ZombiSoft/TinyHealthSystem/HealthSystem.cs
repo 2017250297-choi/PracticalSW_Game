@@ -60,6 +60,7 @@ public class HealthSystem : MonoBehaviour
 	//==============================================================
 	void Update ()
 	{
+		Debug.Log("health");
 		if (Regenerate)
 			Regen();
 	}

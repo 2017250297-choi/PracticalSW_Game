@@ -32,12 +32,12 @@ public class Player : MonoBehaviour
     private Sensor_HeroKnight m_wallSensorR2;
     private Sensor_HeroKnight m_wallSensorL1;
     private Sensor_HeroKnight m_wallSensorL2;
-    private bool m_isWallSliding = false;
+    //private bool m_isWallSliding = false;
     private bool m_grounded = false;
     private bool m_rolling = false;
     private int m_facingDirection = 1;
     private int m_currentAttack = 0;
-    private float m_timeSinceAttack = 0.0f;
+    //private float m_timeSinceAttack = 0.0f;
     private float m_delayToIdle = 0.0f;
     private float m_rollDuration = 0.1f;
     private float m_rollCurrentTime;
