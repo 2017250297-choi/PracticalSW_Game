@@ -175,7 +175,8 @@ public class GamePlay : MonoBehaviour
                 // 호스트 플레이어 생성
                 m_serverPlayer = Instantiate(m_serverPlayerPrefab) as GameObject;
                 m_serverPlayer.name = m_serverPlayerPrefab.name;
-                m_serverPlayerHealth = Instantiate(m_serverPlayerHealthPrefab) as GameObject;
+                m_serverPlayerHealth = Instantiate(m_serverPlayerHealthPrefab,GameObject.Find("Canvas").transform) as GameObject;
+                m_serverPlayer.name = "serverHealth";
 
                 GameObject.Find("Title").SetActive(false); // 타이틀 표시 OFF
 
@@ -200,7 +201,7 @@ public class GamePlay : MonoBehaviour
                 // 클라이언트 플레이어 생성
                 m_clientPlayer = Instantiate(m_clientPlayerPrefab) as GameObject;
                 m_clientPlayer.name = m_clientPlayerPrefab.name;
-                m_clientPlayerHealth = Instantiate(m_clientPlayerHealthPrefab) as GameObject;
+                m_clientPlayerHealth = Instantiate(m_clientPlayerHealthPrefab, GameObject.Find("Canvas").transform) as GameObject;
 
                 GameObject.Find("Title").SetActive(false);
 

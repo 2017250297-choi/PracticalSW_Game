@@ -24,7 +24,8 @@ public class Player : MonoBehaviour
     [SerializeField] float m_rollForce = 6.0f;
     [SerializeField] bool m_noBlood = false;
     [SerializeField] GameObject m_slideDust;
-    [SerializeField] GameObject my_healthObj;
+    public static GameObject my_healthObj;
+    public PlayerHealthSystem myHealthSys;
     private Animator m_animator;
     private Rigidbody2D m_body2d;
     private Sensor_HeroKnight m_groundSensor;
