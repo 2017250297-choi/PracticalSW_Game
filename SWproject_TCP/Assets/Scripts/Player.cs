@@ -24,8 +24,10 @@ public class Player : MonoBehaviour
     [SerializeField] float m_rollForce = 6.0f;
     [SerializeField] bool m_noBlood = false;
     [SerializeField] GameObject m_slideDust;
-    public static GameObject my_healthObj;
-    public PlayerHealthSystem myHealthSys;
+    public GameObject PlayerHealthPrefab;
+    public GameObject PlayerHealth;
+    private PlayerHealthSystem healthSystem;
+
     private Animator m_animator;
     private Rigidbody2D m_body2d;
     private Sensor_HeroKnight m_groundSensor;
@@ -45,8 +47,15 @@ public class Player : MonoBehaviour
     private float globalCoolDown = 0.0f;
     private float originPos;
     private float enemyPos;
+
+    public void getHit()
+    {
+        healthSystem.TakeDamage(10);
+        Debug.Log(healthSystem.hitPoint);
+    }
     private void Awake()
     {
+        
         m_currentMotion = Motion.Idle;
         m_anim = GetComponentInChildren<Animation>();
 
@@ -56,7 +65,9 @@ public class Player : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-
+        PlayerHealth = Instantiate(PlayerHealthPrefab, GameObject.Find("Canvas").transform) as GameObject;
+        //PlayerHealth.name = this.name;
+        healthSystem = PlayerHealth.GetComponent<PlayerHealthSystem>();
     }
 
     // Update is called once per frame
@@ -81,6 +92,7 @@ public class Player : MonoBehaviour
             case Motion.Hurt:
                 break;
         }
+        
     }
 
 

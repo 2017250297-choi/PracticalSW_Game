@@ -10,8 +10,6 @@ public class GamePlay : MonoBehaviour
 {
     public GameObject m_serverPlayerPrefab; // 서버 측 플레이어 캐릭터
     public GameObject m_clientPlayerPrefab; // 클라이언트 측 플레이어 캐릭터
-    public GameObject m_serverPlayerHealthPrefab;
-    public GameObject m_clientPlayerHealthPrefab;
 
     public GameObject m_CountdownObject; // 카운트다운 표시 이미지 모음
 
@@ -24,9 +22,6 @@ public class GamePlay : MonoBehaviour
     const int PLAYER_NUM = 2;
     GameObject m_serverPlayer; // 자주 사용하므로 확보
     GameObject m_clientPlayer; // 자주 사용하므로 확보
-    public GameObject m_serverPlayerHealth;
-    public GameObject m_clientPlayerHealth;
-
 
     GameState m_gameState = GameState.None;
     InputData[] m_inputData = new InputData[PLAYER_NUM];
@@ -175,8 +170,6 @@ public class GamePlay : MonoBehaviour
                 // 호스트 플레이어 생성
                 m_serverPlayer = Instantiate(m_serverPlayerPrefab) as GameObject;
                 m_serverPlayer.name = m_serverPlayerPrefab.name;
-                m_serverPlayerHealth = Instantiate(m_serverPlayerHealthPrefab,GameObject.Find("Canvas").transform) as GameObject;
-                m_serverPlayer.name = "serverHealth";
 
                 GameObject.Find("Title").SetActive(false); // 타이틀 표시 OFF
 
@@ -201,7 +194,7 @@ public class GamePlay : MonoBehaviour
                 // 클라이언트 플레이어 생성
                 m_clientPlayer = Instantiate(m_clientPlayerPrefab) as GameObject;
                 m_clientPlayer.name = m_clientPlayerPrefab.name;
-                m_clientPlayerHealth = Instantiate(m_clientPlayerHealthPrefab, GameObject.Find("Canvas").transform) as GameObject;
+
 
                 GameObject.Find("Title").SetActive(false);
 
@@ -284,6 +277,19 @@ public class GamePlay : MonoBehaviour
     // 공격/회피 선택(실행)
     void UpdateAction()
     {
+        if(Input.GetMouseButtonDown(0))
+        {
+            if(m_playerId==1)
+            {
+
+                m_serverPlayer.GetComponent<Player>().getHit();
+            }
+            else
+            {
+                m_clientPlayer.GetComponent<Player>().getHit();
+            }
+            Debug.Log("click");
+        }
 
     }
 

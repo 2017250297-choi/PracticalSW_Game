@@ -1047,7 +1047,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   currentHealthBar: {fileID: 5510382442419550054}
   currentHealthGlobe: {fileID: 1972403611979222780}
-  healthText: {fileID: 5510382442386349951}
+  healthText: {fileID: 5510382441472828713}
   hitPoint: 100
   maxHitPoint: 100
   currentManaBar: {fileID: 5510382441600354413}
