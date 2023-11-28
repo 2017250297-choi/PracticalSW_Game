@@ -114,7 +114,7 @@ public class GamePlay : MonoBehaviour
     {
         //Debug.Log(m_gameState); // 나중에 없애기
 
-        switch(m_gameState)
+        switch (m_gameState)
         {
             case GameState.None:
                 break;
@@ -130,7 +130,7 @@ public class GamePlay : MonoBehaviour
                     m_isCountdown = true;
                     StartCoroutine(CountdownCoroutine());
                 }
-                
+
                 break;
 
             case GameState.Action:
@@ -206,6 +206,7 @@ public class GamePlay : MonoBehaviour
                 m_clientPlayer = Instantiate(m_clientPlayerPrefab) as GameObject;
                 m_clientPlayer.name = m_clientPlayerPrefab.name;
 
+
                 GameObject.Find("Title").SetActive(false);
 
                 Debug.Log("클라이언트 접속");
@@ -271,10 +272,10 @@ public class GamePlay : MonoBehaviour
         m_gameState = GameState.Action; // 얘 위치를 마지막으로 빼야 하는지?
         yield return new WaitForSecondsRealtime(1.5f);
         m_countdownText.text = "";
-        
+
     }
 
-    
+
     // 공격/회피 선택(실행)
     void UpdateAction()
     {

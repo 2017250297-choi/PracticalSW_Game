@@ -19,9 +19,76 @@ public class Player : MonoBehaviour
     Motion m_currentMotion;
     Animation m_anim;
     int m_damage;
+    [SerializeField] float m_speed = 4.0f;
+    [SerializeField] float m_jumpForce = 7.5f;
+    [SerializeField] float m_rollForce = 6.0f;
+    [SerializeField] bool m_noBlood = false;
+    [SerializeField] GameObject m_slideDust;
+    public GameObject PlayerHealthPrefab;
+    public GameObject PlayerHealth;
+    private PlayerHealthSystem healthSystem;
 
+    private Animator m_animator;
+    private Rigidbody2D m_body2d;
+    private Sensor_HeroKnight m_groundSensor;
+    private Sensor_HeroKnight m_wallSensorR1;
+    private Sensor_HeroKnight m_wallSensorR2;
+    private Sensor_HeroKnight m_wallSensorL1;
+    private Sensor_HeroKnight m_wallSensorL2;
+    //private bool m_isWallSliding = false;
+    private bool m_grounded = false;
+    private bool m_rolling = false;
+    private int m_facingDirection = 1;
+    private int m_currentAttack = 0;
+    //private float m_timeSinceAttack = 0.0f;
+    private float m_delayToIdle = 0.0f;
+    private float m_rollDuration = 0.1f;
+    private float m_rollCurrentTime;
+    private float globalCoolDown = 0.0f;
+    private float originPos;
+    private float enemyPos;
+    public void Attack()
+    {
+        //animation
+        m_currentAttack=(m_currentAttack+1)%3;
+        m_animator.SetTrigger("Attack"+m_currentAttack);
+        //set cooltime
+
+        //motion
+
+        //do real Deal
+
+
+
+    }
+    public void Dodge()
+    {
+        //animation
+        m_animator.SetTrigger("Dodge");
+        //set cooltime
+
+        //motion
+
+        //do real Deal
+    }
+    public void Jump()
+    {
+        //animation
+        m_animator.SetTrigger("Jump");
+        //set cooltime
+
+        //motion
+
+        //do real Deal
+    }
+    public void getHit()
+    {
+        healthSystem.TakeDamage(10);
+        Debug.Log(healthSystem.hitPoint);
+    }
     private void Awake()
     {
+        
         m_currentMotion = Motion.Idle;
         m_anim = GetComponentInChildren<Animation>();
 
@@ -31,7 +98,10 @@ public class Player : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        
+        m_animator = GetComponent<Animator>();
+        PlayerHealth = Instantiate(PlayerHealthPrefab, GameObject.Find("Canvas").transform) as GameObject;
+        //PlayerHealth.name = this.name;
+        healthSystem = PlayerHealth.GetComponent<PlayerHealthSystem>();
     }
 
     // Update is called once per frame
@@ -56,6 +126,7 @@ public class Player : MonoBehaviour
             case Motion.Hurt:
                 break;
         }
+        
     }
 
 
