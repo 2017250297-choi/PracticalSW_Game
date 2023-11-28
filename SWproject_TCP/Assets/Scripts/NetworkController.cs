@@ -53,16 +53,23 @@ public class NetworkController
 
 
     // 액션 송신
-    public void SendActionData(ActionKind actionKind, float actionTime)
+    /*
+        매개변수에서 float actionTime 없애고, (state와 actionKind를 비교해서 판정)
+        position.x값을 받도록 해서 현재 나의 위치 x값도 같이 보내도록? 하면 어떨까
+        그러면 상대방은 그 위치값과 액션 종류를 받아서 상대방이 플레이어 캐릭터를
+        움직이도록 모션과 위치를 계산/조정하게...
+        그러면 타이밍이 많이 어긋나려나?
+    */
+    public void SendActionData(ActionKind actionKind, short damageValue)
     {
         // 구조체를 byte 배열로 변환
         byte[] data = new byte[3];
         data[0] = (byte)actionKind;
 
         // 정수화
-        short actTime = (short)(actionTime * 1000.0f);
+        //short actTime = (short)(actionTime * 1000.0f);
         // 네트워크 바이트오더로 변환
-        short netOrder = IPAddress.HostToNetworkOrder(actTime);
+        short netOrder = IPAddress.HostToNetworkOrder(damageValue);
         // byte[] 형으로 변환
         byte[] conv = BitConverter.GetBytes(netOrder);
         data[1] = conv[0];
@@ -73,7 +80,7 @@ public class NetworkController
     }
 
     // 액션 수신
-    public bool ReceiveActionData(ref ActionKind actionKind, ref float actionTime)
+    public bool ReceiveActionData(ref ActionKind actionKind, ref short damageValue)
     {
         byte[] data = new byte[1024];
 
@@ -92,7 +99,7 @@ public class NetworkController
         // 호스트 바이트오더로 변환
         short hostOrder = IPAddress.NetworkToHostOrder(netOrder);
         // float 단위 시간으로 되돌림
-        actionTime = hostOrder / 1000.0f;
+        //actionTime = hostOrder / 1000.0f;
 
         return true;
     }

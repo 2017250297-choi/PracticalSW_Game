@@ -170,6 +170,7 @@ MonoBehaviour:
   m_serverPlayerPrefab: {fileID: 6323719953710832613, guid: e59235e62b3fe854cb2b6372c69cd438, type: 3}
   m_clientPlayerPrefab: {fileID: 6323719953710832613, guid: bf493c8d9579e5944aa1ab4f52fa0919, type: 3}
   m_countdownText: {fileID: 841428993}
+  m_actionSelect: {fileID: 893695798}
   m_damageTextPrefab: {fileID: 0}
   m_finalResultWinPrefab: {fileID: 0}
   m_finalResultLosePrefab: {fileID: 0}
@@ -1304,6 +1305,50 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 841428991}
   m_CullTransparentMesh: 1
+--- !u!1 &893695798
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 893695800}
+  - component: {fileID: 893695799}
+  m_Layer: 0
+  m_Name: ActionSelect
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &893695799
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 893695798}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cbd5dac5af30ab64e94d421094406e0c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!4 &893695800
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 893695798}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1164047184
 GameObject:
   m_ObjectHideFlags: 0
@@ -1665,3 +1710,4 @@ SceneRoots:
   - {fileID: 1343448029}
   - {fileID: 1164047188}
   - {fileID: 273995154}
+  - {fileID: 893695800}

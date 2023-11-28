@@ -12,8 +12,9 @@ public class GamePlay : MonoBehaviour
     public GameObject m_serverPlayerPrefab; // 서버 측 플레이어 캐릭터
     public GameObject m_clientPlayerPrefab; // 클라이언트 측 플레이어 캐릭터
 
-    //public GameObject m_CountdownObject; // 카운트다운 표시 이미지 모음
-    public TextMeshProUGUI m_countdownText;
+    public TextMeshProUGUI m_countdownText; // 카운트다운 표시하는 GUI 텍스트
+
+    public GameObject m_actionSelect; // 액션 선택 관리하는 오브젝트
 
     public GameObject m_damageTextPrefab; // 데미지 표시
 
@@ -74,7 +75,7 @@ public class GamePlay : MonoBehaviour
         for (int i = 0; i < m_inputData.Length; ++i)
         {
             m_inputData[i].attackInfo.actionKind = ActionKind.None;
-            m_inputData[i].attackInfo.actionTime = 0.0f;
+            m_inputData[i].attackInfo.damageValue = 0;
         }
 
         // 아직 동작시키지 않음
@@ -253,16 +254,7 @@ public class GamePlay : MonoBehaviour
     }
 
 
-    // 게임 시작 전 카운트다운
-    void UpdateCountdown()
-    {
-        //StartCoroutine(StartCountdown()); // 카운트다운 코루틴 호출
-        //Invoke("CountdownStop", 7.5f); // 7.5초 뒤 코루틴 종료
-        //return;
-    }
-
-
-    // 카운트다운 띄우는 코루틴
+    // 게임 시작 전 카운트다운 띄우는 코루틴
     private IEnumerator CountdownCoroutine()
     {
         yield return new WaitForSecondsRealtime(1f);
@@ -282,18 +274,79 @@ public class GamePlay : MonoBehaviour
         
     }
 
-
+    
     // 공격/회피 선택(실행)
     void UpdateAction()
     {
+        m_isSendAction = false;
+        m_isReceiveAction = false;
 
+        ActionSelect actionSelect = m_actionSelect.GetComponent<ActionSelect>();
+        if (actionSelect.IsSelected() && m_isSendAction == false)
+        {
+            // 입력키(마우스클릭)에 따른 액션 선택을 가져옴
+            ActionKind action = actionSelect.GetActionKind();
+            short damage = actionSelect.GetDamage();
+
+            m_inputData[m_playerId].attackInfo.actionKind = action;
+            m_inputData[m_playerId].attackInfo.damageValue = damage;
+
+            // 상대방에게 전송
+            m_networkController.SendActionData(action, damage);
+
+            // 자신의 애니메이션을 공격/회피에 맞게 변형해주는 코드인데
+            // 이건 꼭 이렇게 안 해도 되고... 적절히 수정해주시면 됩니다.
+            // 아래처럼 하면, 클릭이 일어나고 전송까지 다 한 다음 플레이어의 공격 액션을 보여주는 것
+            // 그러면 딜레이가 있을 수 있으니, 그냥 클릭 시 바로 액션을 취하도록 ActionSelec 혹은
+            // Player 스크립트에서 액션을 취하도록 해주셔도 될 것 같습니다
+            GameObject player = (m_playerId == 0) ? m_serverPlayer : m_clientPlayer;
+            player.GetComponent<Player>().ChangeAnimationAction(action);
+
+            m_isSendAction = true; // 송신 성공
+            // 또 수시로 액션을 보내야 하니 이건 다시 false로 바꿔주어야 함! 코드 추가하기
+        }
+
+        // 상대방의 액션 수신 대기
+        if (m_isReceiveAction == false)
+        {
+            // 수신 체크: 상대의 공격/방어를 체크
+            bool isReceived = m_networkController.ReceiveActionData(
+                ref m_inputData[m_playerId ^ 1].attackInfo.actionKind,
+                ref m_inputData[m_playerId ^ 1].attackInfo.damageValue);
+
+            if (isReceived)
+            {
+                // 애니메이션(대전 상대)
+                ActionKind action = m_inputData[m_playerId ^ 1].attackInfo.actionKind;
+                GameObject player = (m_playerId == 1) ? m_serverPlayer : m_clientPlayer;
+                // 여기도 마찬가지로 수정 자유롭게...
+                player.GetComponent<Player>().ChangeAnimationAction(action);
+
+                m_isReceiveAction = true; // 수신 성공
+                // 여기도 나중에 false로 다시 고쳐주는 코드가 필요
+            }
+            else
+            {
+                // 상대방 입력이 없는 상태
+                m_inputData[m_playerId ^ 1].attackInfo.actionKind = ActionKind.None;
+                m_inputData[m_playerId ^ 1].attackInfo.damageValue = 0;
+                m_isReceiveAction = true; // 수신 성공으로 침
+            }
+        }
+
+        Debug.Log("Own Action:" + m_inputData[m_playerId].attackInfo.actionKind.ToString() +
+                      ",  Damage:" + m_inputData[m_playerId].attackInfo.damageValue);
+        Debug.Log("Opponent Action:" + m_inputData[m_playerId ^ 1].attackInfo.actionKind.ToString() +
+                  ",  Damage:" + m_inputData[m_playerId ^ 1].attackInfo.damageValue);
     }
 
     // 상대방의 공격/회피 통신 대기
+    /*
     void UpdateWaitAction()
     {
         // 수신대기
     }
+    */
 
 
     // 체력바 반영
@@ -313,7 +366,15 @@ public class GamePlay : MonoBehaviour
     // 게임 종료 시 화면
     void OnGUIEndGame()
     {
+        // 종료 버튼 표시
+        GameObject obj = GameObject.Find("FinalResult"); // 이거 그냥 public으로 받자
+        if (obj == null) { return; }
 
+        Rect r = new Rect(Screen.width / 2 - 50, Screen.height - 60, 100, 50);
+        if (GUI.Button(r, "RESET"))
+        {
+            // 씬 변환 코드 아래에 추가
+        }
     }
 
 
@@ -349,6 +410,23 @@ public class GamePlay : MonoBehaviour
     // 연결 끊김 알림
     void NotifyDisconnection()
     {
+        GUISkin skin = GUI.skin;
+        GUIStyle style = new GUIStyle(GUI.skin.GetStyle("button"));
+        style.normal.textColor = Color.white;
+        style.fontSize = 25;
 
+        float sx = 450;
+        float sy = 200;
+        float px = Screen.width / 2 - sx * 0.5f;
+        float py = Screen.height / 2 - sy * 0.5f;
+
+        string message = "연결이 끊어졌습니다.";
+
+        if (GUI.Button(new Rect(px, py, sx, sy), message, style))
+        {
+            // 게임 종료
+            m_isGameOver = true;
+            // 씬 변환하는 코드 아래에 추가
+        }
     }
 }

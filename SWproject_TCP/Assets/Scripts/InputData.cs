@@ -15,13 +15,14 @@ public enum ActionKind
 public struct AttackInfo
 {
     public ActionKind actionKind;
-    public float actionTime; // 경과 시간. 서로의 공격/회피 타이밍을 비교하는 용도
-    // 데미지 값도 여기에 넣으면 될 것 같은?
+    //public float actionTime; // 경과 시간. 서로의 공격/회피 타이밍을 비교하는 용도
+    public short damageValue; // 전송할 데미지 값도 추가
 
-    public AttackInfo(ActionKind kind, float time)
+    public AttackInfo(ActionKind kind, short damage)
     {
         actionKind = kind;
-        actionTime = time;
+        //actionTime = time;
+        damageValue = damage;
     }
 };
 
@@ -41,13 +42,16 @@ public enum Winner
     Draw,
 };
 
+
+// 여기에서 스테이트를 비교해서 공격/회피 성공을 판정하도록 함.
+// 현재 아래 코드는 시간을 비교하는 코드를 그대로 가져온 것이라 수정해야 함!
 class ResultChecker
 {
     // 공격/회피에서 승패 구하기
     public static Winner GetActionWinner(AttackInfo server, AttackInfo client)
     {
-        string debugStr = "server.actionKind: " + server.actionKind.ToString() + " time: " + server.actionTime.ToString();
-        debugStr += "\nclient.actionKind: " + client.actionKind.ToString() + " time: " + client.actionTime.ToString();
+        string debugStr = "server.actionKind: " + server.actionKind.ToString() + " time: " + server.damageValue.ToString();
+        debugStr += "\nclient.actionKind: " + client.actionKind.ToString() + " time: " + client.damageValue.ToString();
         Debug.Log(debugStr);
 
         ActionKind serverAction = server.actionKind;
@@ -62,8 +66,8 @@ class ResultChecker
 
 
         // 시간 대결 (공격/회피 타이밍 판정)
-        float serverTime = server.actionTime;
-        float clientTime = client.actionTime;
+        //float serverTime = server.actionTime;
+        //float clientTime = client.actionTime;
 
         /* 주의!!
            회피 키를 눌렀을 때 회피가 유효한 시간을 설정해야 함!
@@ -84,6 +88,7 @@ class ResultChecker
            그것이 서로 일치해야 한다는 것도 유의해서 테스트하자!
         */
 
+        /*
         if (serverAction == ActionKind.Attack)
         {
             // 공격-공격이거나 공격-회피인 경우
@@ -117,8 +122,11 @@ class ResultChecker
                 return Winner.Draw;
             }
         }
+        */
 
         // 시간이 동일할 때, 무승부
-        // return Winner.Draw;
+        return Winner.Draw;
+
     }
+
 }
