@@ -244,6 +244,9 @@ public class GamePlay : MonoBehaviour
     // 게임 시작 전 카운트다운
     void UpdateCountdown()
     {
+        m_gameState = GameState.Action;
+        return;
+        //
         GameObject countObj = GameObject.Find("CountdownObject");
         if (countObj == null)
         {
@@ -282,15 +285,41 @@ public class GamePlay : MonoBehaviour
             if(m_playerId==1)
             {
 
-                m_serverPlayer.GetComponent<Player>().getHit();
+                m_clientPlayer.GetComponent<Player>().Attack();
+                //packet send
             }
             else
             {
-                m_clientPlayer.GetComponent<Player>().getHit();
+                m_serverPlayer.GetComponent<Player>().Attack();
             }
             Debug.Log("click");
         }
+        if(Input.GetKeyDown("d"))
+        {
+            if (m_playerId == 1)
+            {
 
+                m_clientPlayer.GetComponent<Player>().Dodge();
+            }
+            else
+            {
+                m_serverPlayer.GetComponent<Player>().Dodge();
+            }
+            Debug.Log("dodge");
+        }
+        if(Input.GetKeyDown("j"))
+        {
+            if (m_playerId == 1)
+            {
+
+                m_clientPlayer.GetComponent<Player>().Jump();
+            }
+            else
+            {
+                m_serverPlayer.GetComponent<Player>().Jump();
+            }
+            Debug.Log("jump");
+        }
     }
 
     // 상대방의 공격/회피 통신 대기

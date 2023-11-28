@@ -131,7 +131,7 @@ Animator:
   m_GameObject: {fileID: 6323719953710832613}
   m_Enabled: 1
   m_Avatar: {fileID: 0}
-  m_Controller: {fileID: 9100000, guid: 3c2a5b7097b0fe44394328c0bdb9252e, type: 2}
+  m_Controller: {fileID: 9100000, guid: fa5c247f50df84a7b8f340a072d0acea, type: 2}
   m_CullingMode: 0
   m_UpdateMode: 0
   m_ApplyRootMotion: 0
@@ -160,8 +160,7 @@ MonoBehaviour:
   m_noBlood: 0
   m_slideDust: {fileID: 1038168246061390451, guid: 8b8c8cc6774fb074cb9139cc631b108e, type: 3}
   PlayerHealthPrefab: {fileID: 5510382441765092199, guid: 27e3405e5588249eaa9c2b9084f1546a, type: 3}
-  PlayerHealthObj: {fileID: 0}
-  myHealthSys: {fileID: 0}
+  PlayerHealth: {fileID: 0}
 --- !u!212 &2954181336601895002
 SpriteRenderer:
   m_ObjectHideFlags: 0

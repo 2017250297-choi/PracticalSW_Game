@@ -47,7 +47,40 @@ public class Player : MonoBehaviour
     private float globalCoolDown = 0.0f;
     private float originPos;
     private float enemyPos;
+    public void Attack()
+    {
+        //animation
+        m_currentAttack=(m_currentAttack+1)%3;
+        m_animator.SetTrigger("Attack"+m_currentAttack);
+        //set cooltime
 
+        //motion
+
+        //do real Deal
+
+
+
+    }
+    public void Dodge()
+    {
+        //animation
+        m_animator.SetTrigger("Dodge");
+        //set cooltime
+
+        //motion
+
+        //do real Deal
+    }
+    public void Jump()
+    {
+        //animation
+        m_animator.SetTrigger("Jump");
+        //set cooltime
+
+        //motion
+
+        //do real Deal
+    }
     public void getHit()
     {
         healthSystem.TakeDamage(10);
@@ -65,6 +98,7 @@ public class Player : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+        m_animator = GetComponent<Animator>();
         PlayerHealth = Instantiate(PlayerHealthPrefab, GameObject.Find("Canvas").transform) as GameObject;
         //PlayerHealth.name = this.name;
         healthSystem = PlayerHealth.GetComponent<PlayerHealthSystem>();
