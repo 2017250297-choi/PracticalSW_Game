@@ -305,6 +305,13 @@ public class GamePlay : MonoBehaviour
 
             m_isSendAction = true; // 송신 성공
             // 또 수시로 액션을 보내야 하니 이건 다시 false로 바꿔주어야 함! 코드 추가하기
+            if(action == ActionKind.Attack)
+            {
+                if (m_playerId == 0)
+                    m_serverPlayer.GetComponent<Player>().Attack();
+                else
+                    m_clientPlayer.GetComponent<Player>().Attack();
+            }
         }
 
         // 상대방의 액션 수신 대기
@@ -325,6 +332,13 @@ public class GamePlay : MonoBehaviour
 
                 m_isReceiveAction = true; // 수신 성공
                 // 여기도 나중에 false로 다시 고쳐주는 코드가 필요
+                if (action == ActionKind.Attack)
+                {
+                    if (m_playerId == 1)
+                        m_serverPlayer.GetComponent<Player>().Attack();
+                    else
+                        m_clientPlayer.GetComponent<Player>().Attack();
+                }
             }
             else
             {
