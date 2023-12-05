@@ -100,6 +100,7 @@ public class NetworkController
         short hostOrder = IPAddress.NetworkToHostOrder(netOrder);
         // float 단위 시간으로 되돌림
         //actionTime = hostOrder / 1000.0f;
+        damageValue = hostOrder;
 
         return true;
     }

@@ -23,6 +23,7 @@ public class ActionSelect : MonoBehaviour
         m_damage = 0;
     }
 
+    /*
     // Update is called once per frame
     void Update()
     {
@@ -36,9 +37,10 @@ public class ActionSelect : MonoBehaviour
                 break;
         }
     }
+    */
 
     // 아직 액션을 취하기 전
-    void UpdateSelectWait()
+    public void UpdateSelectWait()
     {
         if (Input.GetMouseButtonDown(0)) // 좌클릭 시 공격
         {
@@ -46,12 +48,26 @@ public class ActionSelect : MonoBehaviour
             m_state = State.Selected;
             m_damage = 10; // 우선 10으로 둔 것. 나중에 랜덤값을 얻도록 수정하기!
         }
+        else if (Input.GetMouseButtonDown(1)) // 우클릭 시 회피
+        {
+            m_selected = ActionKind.Avoid;
+            m_state = State.Selected;
+            m_damage = 0;
+        }
+        else
+        {
+            m_selected = ActionKind.None;
+            m_state = State.SelectWait;
+            m_damage = 0;
+        }
     }
 
     // 액션을 선택한 후
     void UpdateSelected()
     {
-
+        m_selected = ActionKind.None;
+        m_state = State.SelectWait;
+        m_damage = 0;
     }
 
     // 선택된 액션 반환

@@ -29,6 +29,7 @@ public class GamePlay : MonoBehaviour
     GameState m_gameState = GameState.None;
     InputData[] m_inputData = new InputData[PLAYER_NUM];
     NetworkController m_networkController = null;
+    ActionSelect actionSelect = null;
     string m_serverAddress;
 
     int m_playerId = 0;
@@ -106,7 +107,7 @@ public class GamePlay : MonoBehaviour
         //m_serverAddress = adrList[0].ToString();
         m_serverAddress = host.AddressList.FirstOrDefault(a => a.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork).ToString();
 
-        //m_startCountdownCoroutine = CountdownCoroutine();
+        actionSelect = m_actionSelect.GetComponent<ActionSelect>();
     }
 
     // Update is called once per frame
@@ -150,7 +151,6 @@ public class GamePlay : MonoBehaviour
         }
 
     }
-
 
     private void OnGUI()
     {
@@ -283,8 +283,10 @@ public class GamePlay : MonoBehaviour
         m_isReceiveAction = false;
 
         ActionSelect actionSelect = m_actionSelect.GetComponent<ActionSelect>();
-        if (actionSelect.IsSelected() && m_isSendAction == false)
+        if (m_isSendAction == false)
         {
+            actionSelect.UpdateSelectWait();
+
             // 입력키(마우스클릭)에 따른 액션 선택을 가져옴
             ActionKind action = actionSelect.GetActionKind();
             short damage = actionSelect.GetDamage();
@@ -298,13 +300,12 @@ public class GamePlay : MonoBehaviour
             // 자신의 애니메이션을 공격/회피에 맞게 변형해주는 코드인데
             // 이건 꼭 이렇게 안 해도 되고... 적절히 수정해주시면 됩니다.
             // 아래처럼 하면, 클릭이 일어나고 전송까지 다 한 다음 플레이어의 공격 액션을 보여주는 것
-            // 그러면 딜레이가 있을 수 있으니, 그냥 클릭 시 바로 액션을 취하도록 ActionSelec 혹은
+            // 그러면 딜레이가 있을 수 있으니, 그냥 클릭 시 바로 액션을 취하도록 ActionSelect 혹은
             // Player 스크립트에서 액션을 취하도록 해주셔도 될 것 같습니다
             GameObject player = (m_playerId == 0) ? m_serverPlayer : m_clientPlayer;
             player.GetComponent<Player>().ChangeAnimationAction(action);
 
             m_isSendAction = true; // 송신 성공
-            // 또 수시로 액션을 보내야 하니 이건 다시 false로 바꿔주어야 함! 코드 추가하기
         }
 
         // 상대방의 액션 수신 대기
@@ -324,7 +325,6 @@ public class GamePlay : MonoBehaviour
                 player.GetComponent<Player>().ChangeAnimationAction(action);
 
                 m_isReceiveAction = true; // 수신 성공
-                // 여기도 나중에 false로 다시 고쳐주는 코드가 필요
             }
             else
             {
@@ -335,10 +335,28 @@ public class GamePlay : MonoBehaviour
             }
         }
 
-        Debug.Log("Own Action:" + m_inputData[m_playerId].attackInfo.actionKind.ToString() +
+        // 공격/회피 시에만 로그 찍도록
+        if (m_inputData[m_playerId].attackInfo.actionKind == ActionKind.Attack ||
+            m_inputData[m_playerId].attackInfo.actionKind == ActionKind.Avoid)
+        {
+            Debug.Log("Own Action:" + m_inputData[m_playerId].attackInfo.actionKind.ToString() +
                       ",  Damage:" + m_inputData[m_playerId].attackInfo.damageValue);
+        }
+
+        if (m_inputData[m_playerId ^ 1].attackInfo.actionKind == ActionKind.Attack ||
+            m_inputData[m_playerId ^ 1].attackInfo.actionKind == ActionKind.Avoid)
+        {
+            Debug.Log("Opponent Action:" + m_inputData[m_playerId ^ 1].attackInfo.actionKind.ToString() +
+                      ",  Damage:" + m_inputData[m_playerId ^ 1].attackInfo.damageValue);
+        }
+        
+
+        /*
+        Debug.Log("Own Action:" + m_inputData[m_playerId].attackInfo.actionKind.ToString() +
+          ",  Damage:" + m_inputData[m_playerId].attackInfo.damageValue);
         Debug.Log("Opponent Action:" + m_inputData[m_playerId ^ 1].attackInfo.actionKind.ToString() +
-                  ",  Damage:" + m_inputData[m_playerId ^ 1].attackInfo.damageValue);
+          ",  Damage:" + m_inputData[m_playerId ^ 1].attackInfo.damageValue);
+        */
     }
 
     // 상대방의 공격/회피 통신 대기

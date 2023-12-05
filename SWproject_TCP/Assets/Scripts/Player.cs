@@ -16,14 +16,17 @@ public class Player : MonoBehaviour
         Avoid, // 회피
         Hurt, // 데미지 입음
     };
+
     Motion m_currentMotion;
     Animation m_anim;
     int m_damage;
+
     [SerializeField] float m_speed = 4.0f;
     [SerializeField] float m_jumpForce = 7.5f;
     [SerializeField] float m_rollForce = 6.0f;
     [SerializeField] bool m_noBlood = false;
     [SerializeField] GameObject m_slideDust;
+
     public GameObject PlayerHealthPrefab;
     public GameObject PlayerHealth;
     private PlayerHealthSystem healthSystem;
@@ -46,7 +49,8 @@ public class Player : MonoBehaviour
     private float m_rollCurrentTime;
     private float globalCoolDown = 0.0f;
     private float originPos;
-    private float enemyPos;
+    private float enemyPos;    
+
     public void Attack()
     {
         //animation
@@ -61,6 +65,7 @@ public class Player : MonoBehaviour
 
 
     }
+
     public void Dodge()
     {
         //animation
@@ -71,6 +76,7 @@ public class Player : MonoBehaviour
 
         //do real Deal
     }
+
     public void Jump()
     {
         //animation
@@ -81,11 +87,13 @@ public class Player : MonoBehaviour
 
         //do real Deal
     }
+
     public void getHit()
     {
         healthSystem.TakeDamage(10);
         Debug.Log(healthSystem.hitPoint);
     }
+
     private void Awake()
     {
         
@@ -107,26 +115,21 @@ public class Player : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        /*
         switch (m_currentMotion)
         {
-            /*
-            case Motion.In:
-                if (m_anim.isPlaying == false)
-                {
-                    ChangeAnimation(Motion.Idle);
-                    // 대기 모션으로 전환할 때 플레이어 표기를 낸다.
-                    GameObject board = GameObject.Find("BoardYou");
-                    board.GetComponent<BoardYou>().Run();
-                }
-                break;
-            */
             case Motion.Idle: // 대기 모션
+                break;
             case Motion.Attack:
+                //Attack();
+                break;
             case Motion.Avoid:
+                //Dodge();
+                break;
             case Motion.Hurt:
                 break;
         }
-        
+        */
     }
 
 
@@ -146,6 +149,14 @@ public class Player : MonoBehaviour
         // ChangeAnimationAttack();
         // }
 
+        if (action == ActionKind.Attack) 
+        {
+            Attack();
+        }
+        else if (action == ActionKind.Avoid)
+        {
+            Dodge();
+        }
     }
 
 
