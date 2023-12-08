@@ -2,6 +2,7 @@
 using System.Net;
 using System;
 using UnityEngine;
+using UnityEngine.Profiling;
 
 public class NetworkController
 {
@@ -60,27 +61,35 @@ public class NetworkController
         움직이도록 모션과 위치를 계산/조정하게...
         그러면 타이밍이 많이 어긋나려나?
     */
-    public void SendActionData(ActionKind actionKind, short damageValue)
+
+    // actionKind, state, damageValue 3개를 주고받음
+    public void SendActionData(ActionKind actionKind, State state, short damageValue, short validDamage)
     {
         // 구조체를 byte 배열로 변환
-        byte[] data = new byte[3];
+        byte[] data = new byte[6];
         data[0] = (byte)actionKind;
+        data[1] = (byte)state;
 
         // 정수화
         //short actTime = (short)(actionTime * 1000.0f);
         // 네트워크 바이트오더로 변환
-        short netOrder = IPAddress.HostToNetworkOrder(damageValue);
+        short netOrder1 = IPAddress.HostToNetworkOrder(damageValue);
+        short netOrder2 = IPAddress.HostToNetworkOrder(validDamage);
         // byte[] 형으로 변환
-        byte[] conv = BitConverter.GetBytes(netOrder);
-        data[1] = conv[0];
-        data[2] = conv[1];
+        byte[] conv = BitConverter.GetBytes(netOrder1); // short형은 2byte라서 conv[2]가 된다
+        data[2] = conv[0];
+        data[3] = conv[1];
+
+        conv = BitConverter.GetBytes(netOrder2);
+        data[4] = conv[0];
+        data[5] = conv[1];
 
         // 데이터 송신
         m_network.Send(data, data.Length);
     }
 
     // 액션 수신
-    public bool ReceiveActionData(ref ActionKind actionKind, ref short damageValue)
+    public bool ReceiveActionData(ref ActionKind actionKind, ref State state, ref short damageValue, ref short validDamage)
     {
         byte[] data = new byte[1024];
 
@@ -94,13 +103,17 @@ public class NetworkController
 
         // byte 배열을 구조체로 변환
         actionKind = (ActionKind)data[0];
+        state = (State)data[1];
         // byte[] 형에서 short 형으로 변환
-        short netOrder = (short)BitConverter.ToUInt16(data, 1);
+        short netOrder1 = (short)BitConverter.ToUInt16(data, 2);
+        short netOrder2 = (short)BitConverter.ToUInt16(data, 4);
         // 호스트 바이트오더로 변환
-        short hostOrder = IPAddress.NetworkToHostOrder(netOrder);
+        short hostOrder1 = IPAddress.NetworkToHostOrder(netOrder1);
+        short hostOrder2 = IPAddress.NetworkToHostOrder(netOrder2);
         // float 단위 시간으로 되돌림
         //actionTime = hostOrder / 1000.0f;
-        damageValue = hostOrder;
+        damageValue = hostOrder1;
+        validDamage = hostOrder2;
 
         return true;
     }

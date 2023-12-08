@@ -8,21 +8,23 @@ public enum ActionKind
 {
     None = 0,
     Attack, // 공격
-    Avoid, // 회피
+    Dodge, // 회피
 };
 
 // 공격/회피 정보 구조체
 public struct AttackInfo
 {
     public ActionKind actionKind;
-    //public float actionTime; // 경과 시간. 서로의 공격/회피 타이밍을 비교하는 용도
-    public short damageValue; // 전송할 데미지 값도 추가
+    public State playerState;
+    public short damageValue; // 내 공격값
+    public short validDamage; // 내가 당한(유효타 먹은) 공격값
 
-    public AttackInfo(ActionKind kind, short damage)
+    public AttackInfo(ActionKind kind, State state, short myDamage, short hittedDamage)
     {
         actionKind = kind;
-        //actionTime = time;
-        damageValue = damage;
+        playerState = state;
+        damageValue = myDamage;
+        validDamage = hittedDamage;
     }
 };
 

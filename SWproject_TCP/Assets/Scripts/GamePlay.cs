@@ -247,20 +247,7 @@ public class GamePlay : MonoBehaviour
             m_clientPlayer.name = m_clientPlayerPrefab.name;
         }
 
-        // 모션이 Idle이 될 때까지 대기
-        /*
-        if (m_serverPlayer.GetComponent<Player>().IsIdleAnimation() == false)
-        {
-            return;
-        }
-        if (m_clientPlayer.GetComponent<Player>().IsIdleAnimation() == false)
-        {
-            return;
-        }
-        Player.cs에서 모션 다루는 거 수정하고 주석 해제하기
-        */
-
-        // 대기 통과 후 다음 상태(카운트다운)로.
+        // 다음 상태(카운트다운)로.
         m_gameState = GameState.Countdown;
     }
 
@@ -291,47 +278,38 @@ public class GamePlay : MonoBehaviour
     {
         m_isSendAction = false;
         m_isReceiveAction = false;
+        short send_validDamage = 0;
 
         //ActionSelect actionSelect = m_actionSelect.GetComponent<ActionSelect>();
-        if (m_isSendAction == false)
-        {
-            actionSelect.UpdateSelectWait();
 
-            // 입력키(마우스클릭)에 따른 액션 선택을 가져옴
-            ActionKind action = actionSelect.GetActionKind();
-            short damage = actionSelect.GetDamage();
 
-            m_inputData[m_playerId].attackInfo.actionKind = action;
-            m_inputData[m_playerId].attackInfo.damageValue = damage;
-
-            // 상대방에게 전송
-            m_networkController.SendActionData(action, damage);
-
-            // 자신의 애니메이션을 공격/회피에 맞게 변형해주는 코드인데
-            // 이건 꼭 이렇게 안 해도 되고... 적절히 수정해주시면 됩니다.
-            // 아래처럼 하면, 클릭이 일어나고 전송까지 다 한 다음 플레이어의 공격 액션을 보여주는 것
-            // 그러면 딜레이가 있을 수 있으니, 그냥 클릭 시 바로 액션을 취하도록 ActionSelect 혹은
-            // Player 스크립트에서 액션을 취하도록 해주셔도 될 것 같습니다
-            m_myPlayerScript.ChangeAnimationAction(action); // 내 캐릭터 액션 모션 반영
-
-            m_isSendAction = true; // 송신 성공
-        }
-
-        // 상대방의 액션 수신 대기
+        // 상대방의 액션 수신부터 함
         if (m_isReceiveAction == false)
         {
             // 수신 체크: 상대의 공격/방어를 체크
             bool isReceived = m_networkController.ReceiveActionData(
                 ref m_inputData[m_playerId ^ 1].attackInfo.actionKind,
-                ref m_inputData[m_playerId ^ 1].attackInfo.damageValue);
+                ref m_inputData[m_playerId ^ 1].attackInfo.playerState,
+                ref m_inputData[m_playerId ^ 1].attackInfo.damageValue,
+                ref m_inputData[m_playerId ^ 1].attackInfo.validDamage);
 
             if (isReceived)
             {
                 // 상대방이 보낸 공격 종류와 데미지
                 ActionKind action = m_inputData[m_playerId ^ 1].attackInfo.actionKind;
+                State state = m_inputData[m_playerId ^ 1].attackInfo.playerState;
                 short damage = m_inputData[m_playerId ^ 1].attackInfo.damageValue;
+                short validDamage = m_inputData[m_playerId ^ 1].attackInfo.validDamage;
+
+                // 내 공격이 유효타였다면, 상대방 오브젝트의 hp를 깎는다
+                if (validDamage > 0)
+                {
+                    m_opponentPlayerScript.getHit(validDamage);
+                }
 
                 // 여기도 마찬가지로 수정 자유롭게...
+                // 상대방의 action이 ActionKind.None이어도, state가 None이 아니라면 그것도 모션으로 반영해주어야 함.
+                // Player.cs에서 state를 인풋으로 해서 애니메이션을 바꾸어주는 ChangeAnimationState(state)를 만들어주고, 여기에 실행하자...
                 m_opponentPlayerScript.ChangeAnimationAction(action); // 상대방 플레이어 오브젝트 액션 모션을 반영
 
                 m_isReceiveAction = true; // 수신 성공
@@ -340,13 +318,24 @@ public class GamePlay : MonoBehaviour
                 // 실제로는 공격/회피 성공 판정을 해서 반영되어야 함.
                 // A가 공격하고, B가 회피해서 이것이 성공했다면, B는 회피 성공을 알리는 패킷을 A에게 전송해야
                 // A도 자신의 공격 데미지를 B의 체력바에 반영하지 않을 수 있음.
-                // -> AttackInfo(전송하는 정보 구조체)에 자신이 깎인 데미지 값(damageValue와 별개로, hittedDamage 변수를 추가했습니다)을 추가해
-                // A가 10의 데미지로 공격 -> B가 그것을 받아 공격 성공/실패를 판정 -> 공격 성공 시 hittedDamage=10으로 상대방에게 전송,
-                // 공격 실패 시 hittedDamage=0으로 전송 -> A는 패킷을 받아 상대방 체력바에서 10을 깎음
+                // -> AttackInfo(전송하는 정보 구조체)에 자신이 깎인 데미지 값(damageValue와 별개로, validDamage 변수를 추가했습니다)을 추가해
+                // A가 10의 데미지로 공격 -> B가 그것을 받아 공격 성공/실패를 판정 -> 공격 성공 시 validDamage=10으로 상대방에게 전송,
+                // 공격 실패 시 validDamage=0으로 전송 -> A는 패킷을 받아 상대방 체력바에서 10을 깎음
                 // 이렇게 구현하면 어떨까 합니다
-                if (action == ActionKind.Attack)
+                // 즉, Attack을 받은 쪽에서 공격 성공/실패를 판정하자! (나중에 서버가 모두 판정하는 식으로 바꿀 수도 있을 것 같음)
+                if (action == ActionKind.Attack) // 상대방 액션이 공격이면
                 {
-                    m_myPlayerScript.getHit(damage);
+                    State myState = actionSelect.GetState(); // 내 상태를 가져옴
+                    if (myState == State.Dodging) // 내가 회피 중이라면 공격을 무효 처리함
+                    {
+                        send_validDamage = 0;
+                    }
+                    else
+                    {
+                        send_validDamage = damage; // damage 값만큼의 유효타가 들어갔음을 전송해서 알림
+                        m_myPlayerScript.getHit(damage);
+                    }
+                    
                 }
 
             }
@@ -354,21 +343,52 @@ public class GamePlay : MonoBehaviour
             {
                 // 상대방 입력이 없는 상태
                 m_inputData[m_playerId ^ 1].attackInfo.actionKind = ActionKind.None;
+                m_inputData[m_playerId ^ 1].attackInfo.playerState = State.None;
                 m_inputData[m_playerId ^ 1].attackInfo.damageValue = 0;
+                m_inputData[m_playerId ^ 1].attackInfo.validDamage = 0;
                 m_isReceiveAction = true; // 수신 성공으로 침
             }
         }
 
+
+        // 수신받은 정보 토대로 판정 후 송신
+        if (m_isSendAction == false)
+        {
+            actionSelect.UpdateSelectAction();
+
+            // 입력키(마우스클릭)에 따른 액션 선택을 가져옴
+            ActionKind action = actionSelect.GetActionKind();
+            State state = actionSelect.GetState(); // 이 부분은 달라지도록 할 수 있음. 마우스 클릭을 하지 않아도 스턴이나 공격/회피중 상태는 몇 초간 유지되어야 함. 코드 수정해주세요!
+            short damage = actionSelect.GetDamage();
+
+            // 스턴 상태거나, 공격/회피중인 상태라면 action과 damage가 캔슬되어야 합니다.
+            // 즉 inputData에 정보값을 담기 전, action = ActionKind.None, damage = 0으로 설정 후 값을 담아야 합니다. 코드 수정해주세요!
+            m_inputData[m_playerId].attackInfo.actionKind = action;
+            m_inputData[m_playerId].attackInfo.playerState = state;
+            m_inputData[m_playerId].attackInfo.damageValue = damage;
+
+            // 상대방에게 전송
+            m_networkController.SendActionData(action, state, damage, send_validDamage);
+
+            // 자신의 애니메이션을 공격/회피에 맞게 변형
+            // 이 부분도 스턴 or 공격/회피중 상태라면 그 애니메이션을 유지하고, 아래 코드는 캔슬되어야 합니다.
+            m_myPlayerScript.ChangeAnimationAction(action);
+
+            m_isSendAction = true; // 송신 성공
+        }
+
+        
+
         // 공격/회피 시에만 로그 찍도록
         if (m_inputData[m_playerId].attackInfo.actionKind == ActionKind.Attack ||
-            m_inputData[m_playerId].attackInfo.actionKind == ActionKind.Avoid)
+            m_inputData[m_playerId].attackInfo.actionKind == ActionKind.Dodge)
         {
             Debug.Log("Own Action:" + m_inputData[m_playerId].attackInfo.actionKind.ToString() +
                       ",  Damage:" + m_inputData[m_playerId].attackInfo.damageValue);
         }
 
         if (m_inputData[m_playerId ^ 1].attackInfo.actionKind == ActionKind.Attack ||
-            m_inputData[m_playerId ^ 1].attackInfo.actionKind == ActionKind.Avoid)
+            m_inputData[m_playerId ^ 1].attackInfo.actionKind == ActionKind.Dodge)
         {
             Debug.Log("Opponent Action:" + m_inputData[m_playerId ^ 1].attackInfo.actionKind.ToString() +
                       ",  Damage:" + m_inputData[m_playerId ^ 1].attackInfo.damageValue);
@@ -390,13 +410,6 @@ public class GamePlay : MonoBehaviour
         // 수신대기
     }
     */
-
-
-    // 체력바 반영
-    void UpdateHP()
-    {
-
-    }
 
 
     // 게임 종료

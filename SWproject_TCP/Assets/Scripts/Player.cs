@@ -154,7 +154,7 @@ public class Player : MonoBehaviour
         {
             Attack();
         }
-        else if (action == ActionKind.Avoid)
+        else if (action == ActionKind.Dodge)
         {
             Dodge();
         }
