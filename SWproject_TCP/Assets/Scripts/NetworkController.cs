@@ -105,4 +105,10 @@ public class NetworkController
         return true;
     }
 
+    // 서버 닫기
+    public void CloseServer()
+    {
+        m_network.StopServer();
+    }
+
 }

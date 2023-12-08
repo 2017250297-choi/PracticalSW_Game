@@ -95,7 +95,7 @@ GameObject:
   - component: {fileID: 8942925490989933264}
   - component: {fileID: 9117128348835321587}
   m_Layer: 0
-  m_Name: HeroKnight_client
+  m_Name: client_HeroKnight
   m_TagString: Player
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -159,7 +159,7 @@ MonoBehaviour:
   m_rollForce: 6
   m_noBlood: 0
   m_slideDust: {fileID: 1038168246061390451, guid: 8b8c8cc6774fb074cb9139cc631b108e, type: 3}
-  PlayerHealthPrefab: {fileID: 5510382441765092199, guid: 27e3405e5588249eaa9c2b9084f1546a, type: 3}
+  PlayerHealthPrefab: {fileID: 5510382441765092199, guid: 769614862a13bd14f8c5974e69b7c455, type: 3}
   PlayerHealth: {fileID: 0}
 --- !u!212 &2954181336601895002
 SpriteRenderer:

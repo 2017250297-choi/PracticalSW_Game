@@ -61,6 +61,9 @@ public class TransportTCP : MonoBehaviour
 
             // 대기
             m_listener.Listen(connectionNum);
+
+            // 연결 시도 감지 -> AcceptCallback으로 이동
+            //m_listener.BeginAccept(AcceptCallback, null);
         }
         catch
         {
@@ -89,6 +92,7 @@ public class TransportTCP : MonoBehaviour
         if (m_listener != null)
         {
             m_listener.Close(); // 소켓 닫기
+            m_listener.Dispose();
             m_listener = null;
         }
 
@@ -113,10 +117,8 @@ public class TransportTCP : MonoBehaviour
         try
         {
             m_socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-            Debug.Log("1. m_socket: " + m_socket);
             m_socket.NoDelay = true;
             m_socket.Connect(address, port);
-            Debug.Log("2. m_socket: " + m_socket);
             ret = LaunchThread();
         }
         catch (Exception e)
@@ -161,6 +163,7 @@ public class TransportTCP : MonoBehaviour
             // 소켓 닫기
             m_socket.Shutdown(SocketShutdown.Both);
             m_socket.Close();
+            m_socket.Dispose();
             m_socket = null;
 
             // 접속 종료를 통지
@@ -200,7 +203,7 @@ public class TransportTCP : MonoBehaviour
 
 
     // 이벤트 통지 함수 등록
-    public void RegiserEventHandler(EventHandler handler)
+    public void RegisterEventHandler(EventHandler handler)
     {
         m_handler += handler;
     }

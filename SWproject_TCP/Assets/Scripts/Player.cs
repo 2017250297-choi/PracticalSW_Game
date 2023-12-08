@@ -54,7 +54,7 @@ public class Player : MonoBehaviour
     public void Attack()
     {
         //animation
-        m_currentAttack=(m_currentAttack+1)%3;
+        m_currentAttack=(m_currentAttack+1)%3 + 1;
         m_animator.SetTrigger("Attack"+m_currentAttack);
         //set cooltime
 
@@ -88,9 +88,10 @@ public class Player : MonoBehaviour
         //do real Deal
     }
 
-    public void getHit()
+    public void getHit(short damage)
     {
-        healthSystem.TakeDamage(10);
+        m_animator.SetTrigger("Hurt");
+        healthSystem.TakeDamage((float)damage);
         Debug.Log(healthSystem.hitPoint);
     }
 

@@ -8,10 +8,12 @@ public class ActionSelect : MonoBehaviour
     ActionKind m_selected; // 공격할지 회피할지 선택
     short m_damage;
 
-    enum State
+    enum State // 캐릭터 상태
     {
         SelectWait, // 선택 대기
         Selected, // 선택 종료
+        //None, // 기본 상태
+        
     }
     State m_state;
 

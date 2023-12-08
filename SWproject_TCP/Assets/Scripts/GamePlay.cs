@@ -25,6 +25,10 @@ public class GamePlay : MonoBehaviour
     const int PLAYER_NUM = 2;
     GameObject m_serverPlayer; // 자주 사용하므로 확보
     GameObject m_clientPlayer; // 자주 사용하므로 확보
+    GameObject m_myPlayer; // 내 플레이어 오브젝트
+    GameObject m_opponentPlayer; // 상대방 플레이어 오브젝트
+    Player m_myPlayerScript; // 내 플레이어의 스크립트
+    Player m_opponentPlayerScript; // 상대방 플레이어의 스크립트
 
     GameState m_gameState = GameState.None;
     InputData[] m_inputData = new InputData[PLAYER_NUM];
@@ -94,7 +98,7 @@ public class GamePlay : MonoBehaviour
             TransportTCP transport = go.AddComponent<TransportTCP>();
             if (transport != null)
             {
-                transport.RegiserEventHandler(EventCallback);
+                transport.RegisterEventHandler(EventCallback);
             }
             DontDestroyOnLoad(go);
         }
@@ -106,6 +110,7 @@ public class GamePlay : MonoBehaviour
         IPHostEntry host = Dns.GetHostEntry(hostname);
         //m_serverAddress = adrList[0].ToString();
         m_serverAddress = host.AddressList.FirstOrDefault(a => a.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork).ToString();
+        
 
         actionSelect = m_actionSelect.GetComponent<ActionSelect>();
     }
@@ -135,6 +140,10 @@ public class GamePlay : MonoBehaviour
                 break;
 
             case GameState.Action:
+                m_myPlayer = (m_playerId == 0) ? m_serverPlayer : m_clientPlayer;
+                m_opponentPlayer = (m_playerId == 1) ? m_serverPlayer : m_clientPlayer;
+                m_myPlayerScript = m_myPlayer.GetComponent<Player>();
+                m_opponentPlayerScript = m_opponentPlayer.GetComponent<Player>();
                 UpdateAction();
                 break;
 
@@ -197,6 +206,7 @@ public class GamePlay : MonoBehaviour
 
             if (GUI.Button(new Rect(px, py + 40, 200, 30), "대전 상대와 접속합니다"))
             {
+                Debug.Log("입력한 서버 IP: " + m_serverAddress);
                 m_networkController = new NetworkController(m_serverAddress); // 서버
                 m_playerId = 1;
                 m_gameState = GameState.Ready;
@@ -282,7 +292,7 @@ public class GamePlay : MonoBehaviour
         m_isSendAction = false;
         m_isReceiveAction = false;
 
-        ActionSelect actionSelect = m_actionSelect.GetComponent<ActionSelect>();
+        //ActionSelect actionSelect = m_actionSelect.GetComponent<ActionSelect>();
         if (m_isSendAction == false)
         {
             actionSelect.UpdateSelectWait();
@@ -302,8 +312,7 @@ public class GamePlay : MonoBehaviour
             // 아래처럼 하면, 클릭이 일어나고 전송까지 다 한 다음 플레이어의 공격 액션을 보여주는 것
             // 그러면 딜레이가 있을 수 있으니, 그냥 클릭 시 바로 액션을 취하도록 ActionSelect 혹은
             // Player 스크립트에서 액션을 취하도록 해주셔도 될 것 같습니다
-            GameObject player = (m_playerId == 0) ? m_serverPlayer : m_clientPlayer;
-            player.GetComponent<Player>().ChangeAnimationAction(action);
+            m_myPlayerScript.ChangeAnimationAction(action); // 내 캐릭터 액션 모션 반영
 
             m_isSendAction = true; // 송신 성공
         }
@@ -318,13 +327,28 @@ public class GamePlay : MonoBehaviour
 
             if (isReceived)
             {
-                // 애니메이션(대전 상대)
+                // 상대방이 보낸 공격 종류와 데미지
                 ActionKind action = m_inputData[m_playerId ^ 1].attackInfo.actionKind;
-                GameObject player = (m_playerId == 1) ? m_serverPlayer : m_clientPlayer;
+                short damage = m_inputData[m_playerId ^ 1].attackInfo.damageValue;
+
                 // 여기도 마찬가지로 수정 자유롭게...
-                player.GetComponent<Player>().ChangeAnimationAction(action);
+                m_opponentPlayerScript.ChangeAnimationAction(action); // 상대방 플레이어 오브젝트 액션 모션을 반영
 
                 m_isReceiveAction = true; // 수신 성공
+
+                // 상대방의 액션이 Attack일 경우 데미지를 체력바에 반영하도록 함.
+                // 실제로는 공격/회피 성공 판정을 해서 반영되어야 함.
+                // A가 공격하고, B가 회피해서 이것이 성공했다면, B는 회피 성공을 알리는 패킷을 A에게 전송해야
+                // A도 자신의 공격 데미지를 B의 체력바에 반영하지 않을 수 있음.
+                // -> AttackInfo(전송하는 정보 구조체)에 자신이 깎인 데미지 값(damageValue와 별개로, hittedDamage 변수를 추가했습니다)을 추가해
+                // A가 10의 데미지로 공격 -> B가 그것을 받아 공격 성공/실패를 판정 -> 공격 성공 시 hittedDamage=10으로 상대방에게 전송,
+                // 공격 실패 시 hittedDamage=0으로 전송 -> A는 패킷을 받아 상대방 체력바에서 10을 깎음
+                // 이렇게 구현하면 어떨까 합니다
+                if (action == ActionKind.Attack)
+                {
+                    m_myPlayerScript.getHit(damage);
+                }
+
             }
             else
             {
@@ -440,6 +464,11 @@ public class GamePlay : MonoBehaviour
         float py = Screen.height / 2 - sy * 0.5f;
 
         string message = "연결이 끊어졌습니다.";
+
+        if (m_playerId == 0)
+        {
+            m_networkController.CloseServer();
+        }
 
         if (GUI.Button(new Rect(px, py, sx, sy), message, style))
         {

@@ -184,7 +184,7 @@ public class PlayerHealthSystem : MonoBehaviour
 	{
 		// Player gets hurt. Do stuff.. play anim, sound..
 
-		PopupText.Instance.Popup("Ouch!", 1f, 1f); // Demo stuff!
+		//PopupText.Instance.Popup("Ouch!", 1f, 1f); // Demo stuff!
 
 		if (hitPoint < 1) // Health is Zero!!
 		{
