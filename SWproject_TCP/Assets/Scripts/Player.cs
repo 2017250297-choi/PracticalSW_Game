@@ -18,7 +18,7 @@ public class Player : MonoBehaviour
     };
 
     Motion m_currentMotion;
-    Animation m_anim;
+    Animation m_anim; // 이거 안 쓰는 애 같은데? 나중에 코드 읽고 삭제하기
     int m_damage;
 
     [SerializeField] float m_speed = 4.0f;
@@ -49,7 +49,10 @@ public class Player : MonoBehaviour
     private float m_rollCurrentTime;
     private float globalCoolDown = 0.0f;
     private float originPos;
-    private float enemyPos;    
+    private float enemyPos;
+
+    public bool isDead; // 사망 판정
+
 
     public void Attack()
     {
@@ -88,12 +91,27 @@ public class Player : MonoBehaviour
         //do real Deal
     }
 
-    public void getHit(short damage)
+    public bool getHit(short damage)
     {
         m_animator.SetTrigger("Hurt");
-        healthSystem.TakeDamage((float)damage);
+        isDead = healthSystem.TakeDamage((float)damage);
         Debug.Log(healthSystem.hitPoint);
+
+        return isDead;
     }
+
+
+    public IEnumerator PlayerDied()
+    {
+        // 플레이어 사망 시 실행되는 코루틴
+
+        Time.timeScale = 0.5f; // 느리게 연출하기 위함
+        m_animator.SetTrigger("Death");
+
+        yield return new WaitForSecondsRealtime(2.0f);
+        Time.timeScale = 1f;
+    }
+
 
     private void Awake()
     {

@@ -5,6 +5,8 @@ using System;
 using System.Net;
 using TMPro;
 using System.Linq;
+using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 
 
 public class GamePlay : MonoBehaviour
@@ -12,14 +14,16 @@ public class GamePlay : MonoBehaviour
     public GameObject m_serverPlayerPrefab; // 서버 측 플레이어 캐릭터
     public GameObject m_clientPlayerPrefab; // 클라이언트 측 플레이어 캐릭터
 
-    public TextMeshProUGUI m_countdownText; // 카운트다운 표시하는 GUI 텍스트
+    //public TextMeshProUGUI m_countdownText; // 카운트다운 표시하는 GUI 텍스트
 
     public GameObject m_actionSelect; // 액션 선택 관리하는 오브젝트
 
     public GameObject m_damageTextPrefab; // 데미지 표시
 
-    public GameObject m_finalResultWinPrefab; // 최종 결과 승리
-    public GameObject m_finalResultLosePrefab; // 최종 결과 패배
+    // 결과 이미지
+    public GameObject m_finalResultObject;
+    public Sprite m_winImage;
+    public Sprite m_loseImage;
 
 
     const int PLAYER_NUM = 2;
@@ -48,7 +52,21 @@ public class GamePlay : MonoBehaviour
 
     // 카운트다운용
     bool m_isCountdown;
+    public GameObject countdownObject;
+    public Sprite countdown_3;
+    public Sprite countdown_2;
+    public Sprite countdown_1;
+    public Sprite countdown_Start;
     //IEnumerator m_startCountdownCoroutine;
+
+    // 캐릭터 사망
+    bool isDead;
+
+    // 자신이 승자인지 아닌지
+    bool isWinner;
+
+    // 결과 발표 코루틴용
+    bool m_isResulted;
 
 
     // 게임 진행 상황
@@ -75,6 +93,9 @@ public class GamePlay : MonoBehaviour
         m_isSendAction = false;
         m_isReceiveAction = false;
         m_isCountdown = false;
+        m_isResulted = false;
+
+        isDead = false;
 
         // 초기화
         for (int i = 0; i < m_inputData.Length; ++i)
@@ -110,7 +131,6 @@ public class GamePlay : MonoBehaviour
         IPHostEntry host = Dns.GetHostEntry(hostname);
         //m_serverAddress = adrList[0].ToString();
         m_serverAddress = host.AddressList.FirstOrDefault(a => a.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork).ToString();
-        
 
         actionSelect = m_actionSelect.GetComponent<ActionSelect>();
     }
@@ -148,7 +168,13 @@ public class GamePlay : MonoBehaviour
                 break;
 
             case GameState.Result:
-                UpdateResult();
+                //UpdateResult();
+                if (!m_isResulted)
+                {
+                    m_isResulted = true;
+                    StartCoroutine(DisPlayResult());
+                }
+
                 break;
 
             case GameState.EndGame:
@@ -255,21 +281,31 @@ public class GamePlay : MonoBehaviour
     // 게임 시작 전 카운트다운 띄우는 코루틴
     private IEnumerator CountdownCoroutine()
     {
+        Image presentCount = countdownObject.GetComponent<Image>();
         yield return new WaitForSecondsRealtime(1f);
         Time.timeScale = 0f; // 플레이어 멈춤
 
-        m_countdownText.text = "3";
+        presentCount.enabled = true;
+        presentCount.sprite = countdown_3;
+        //m_countdownText.text = "3";
         yield return new WaitForSecondsRealtime(1.5f);
-        m_countdownText.text = "2";
+
+        presentCount.sprite = countdown_2;
+        //m_countdownText.text = "2";
         yield return new WaitForSecondsRealtime(1.5f);
-        m_countdownText.text = "1";
+
+        presentCount.sprite = countdown_1;
+        //m_countdownText.text = "1";
         yield return new WaitForSecondsRealtime(1.5f);
-        m_countdownText.text = "Start!";
+
+        presentCount.sprite = countdown_Start;
+        //m_countdownText.text = "Start!";
         Time.timeScale = 1f; // 플레이어 움직임 시작
         m_gameState = GameState.Action; // 얘 위치를 마지막으로 빼야 하는지?
         yield return new WaitForSecondsRealtime(1.5f);
-        m_countdownText.text = "";
 
+        presentCount.enabled = false;
+        //m_countdownText.text = "";
     }
 
 
@@ -279,6 +315,7 @@ public class GamePlay : MonoBehaviour
         m_isSendAction = false;
         m_isReceiveAction = false;
         short send_validDamage = 0;
+        
 
         //ActionSelect actionSelect = m_actionSelect.GetComponent<ActionSelect>();
 
@@ -301,9 +338,18 @@ public class GamePlay : MonoBehaviour
                 short damage = m_inputData[m_playerId ^ 1].attackInfo.damageValue;
                 short validDamage = m_inputData[m_playerId ^ 1].attackInfo.validDamage;
 
-                // 내 공격이 유효타였다면, 상대방 오브젝트의 hp를 깎는다
-                if (validDamage > 0)
+                if (validDamage > 100)
                 {
+                    // validDamage가 100 이상의 값이라고 왔다면, 사망한 상태임을 알리는 것.
+                    m_opponentPlayerScript.getHit(validDamage);
+                    isWinner = true;
+                    StartCoroutine(m_opponentPlayerScript.PlayerDied()); // 플레이어 사망 코루틴 실행
+                    m_gameState = GameState.Result;
+                    m_isGameOver = true;
+                }
+                else if (validDamage > 0)
+                {
+                    // 내 공격이 유효타였다면, 상대방 오브젝트의 hp를 깎는다
                     m_opponentPlayerScript.getHit(validDamage);
                 }
 
@@ -332,8 +378,18 @@ public class GamePlay : MonoBehaviour
                     }
                     else
                     {
+                        isDead = m_myPlayerScript.getHit(damage);
                         send_validDamage = damage; // damage 값만큼의 유효타가 들어갔음을 전송해서 알림
-                        m_myPlayerScript.getHit(damage);
+
+                        if (isDead) // 내가 사망하면
+                        {
+                            send_validDamage = 101; // send_validDamage가 100보다 크면, 사망한 상태라고 알리는 것.
+                            isWinner = false;
+                            StartCoroutine(m_myPlayerScript.PlayerDied()); // 플레이어 사망 코루틴 실행
+                            m_gameState = GameState.Result; // 게임을 끝내기 전 승패를 발표하는 단계로 넘어감.
+                            m_isGameOver = true;
+                        }
+
                     }
                     
                 }
@@ -412,28 +468,6 @@ public class GamePlay : MonoBehaviour
     */
 
 
-    // 게임 종료
-    void UpdateEndGame()
-    {
-
-    }
-
-
-    // 게임 종료 시 화면
-    void OnGUIEndGame()
-    {
-        // 종료 버튼 표시
-        GameObject obj = GameObject.Find("FinalResult"); // 이거 그냥 public으로 받자
-        if (obj == null) { return; }
-
-        Rect r = new Rect(Screen.width / 2 - 50, Screen.height - 60, 100, 50);
-        if (GUI.Button(r, "RESET"))
-        {
-            // 씬 변환 코드 아래에 추가
-        }
-    }
-
-
     // 게임 종료 체크
     public bool IsGameOver()
     {
@@ -442,11 +476,62 @@ public class GamePlay : MonoBehaviour
 
 
     // 게임 결과 표시
+    // 이건 코루틴으로?
     void UpdateResult()
     {
 
     }
 
+    IEnumerator DisPlayResult()
+    {
+        Image result = countdownObject.GetComponent<Image>();
+
+        if (isWinner)
+        {
+            result.enabled = true;
+            result.sprite = m_winImage;
+        }
+        else
+        {
+            result.enabled = true;
+            result.sprite = m_loseImage;
+        }
+
+        yield return new WaitForSecondsRealtime(1f);
+
+        m_gameState = GameState.EndGame;
+    }
+
+
+    // 게임 종료
+    void UpdateEndGame()
+    {
+        OnGUIEndGame();
+    }
+
+
+    // 게임 종료 시 화면
+    void OnGUIEndGame()
+    {
+        // 종료 버튼 표시
+        //GameObject obj = GameObject.Find("FinalResult");
+        //if (obj == null) { return; }
+
+        Rect r = new Rect(Screen.width / 2 - 50, Screen.height - 60, 100, 50);
+        if (GUI.Button(r, "Retry"))
+        {
+            // 씬 변환 코드 아래에 추가
+            SceneManager.LoadScene(0);
+
+            // 현재 LoadScene만으로는 재시작을 완벽하게 구현할 수 없다.
+            // 이렇게 테스트해보니, 상대방이 아직 접속하지 않았는데 상대방 플레이어 오브젝트가 생기기도 하고,
+            // 네트워크에서 싱크로가 맞지 않고 차이나게 된다.
+            // (LoadScene을 하면 데이터가 모두 날아가는 것은 맞다.)
+            // 아마 Awake()를 사용하든가,
+            // 생성한 오브젝트를 Destroy하는 코드를 추가한 후 LoadScene을 마지막에 해야 할 것 같다. Initiate의 문제일 수 있다는 듯.
+            // 다른 스크립트에서 Start()를 사용하는지도 찾아보자.
+        }
+    }
 
     // 이벤트 발생 시 콜백 함수
     public void EventCallback(NetEventState state)
@@ -488,6 +573,7 @@ public class GamePlay : MonoBehaviour
             // 게임 종료
             m_isGameOver = true;
             // 씬 변환하는 코드 아래에 추가
+            SceneManager.LoadScene(0);
         }
     }
 }

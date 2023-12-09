@@ -10,7 +10,7 @@ public class PlayerHealthSystem : MonoBehaviour
 	public Image currentHealthBar;
 	public Image currentHealthGlobe;
 	public Text healthText;
-	public float hitPoint = 100f;
+	public float hitPoint = 100f; // 최대 체력
 	public float maxHitPoint = 100f;
 
 	public Image currentManaBar;
@@ -99,15 +99,20 @@ public class PlayerHealthSystem : MonoBehaviour
 		healthText.text = hitPoint.ToString("0") + "/" + maxHitPoint.ToString("0");
 	}
 
-	public void TakeDamage(float Damage)
+	public bool TakeDamage(float Damage)
 	{
 		hitPoint -= Damage;
 		if (hitPoint < 1)
-			hitPoint = 0;
-
+		{
+            hitPoint = 0;
+            UpdateGraphics();
+            return true;
+        }
+			
 		UpdateGraphics();
+		return false;
 
-		StartCoroutine(PlayerHurts());
+		//StartCoroutine(PlayerHurts());
 	}
 
 	public void HealDamage(float Heal)
@@ -118,6 +123,7 @@ public class PlayerHealthSystem : MonoBehaviour
 
 		UpdateGraphics();
 	}
+
 	public void SetMaxHealth(float max)
 	{
 		maxHitPoint += (int)(maxHitPoint * max / 100);
@@ -201,8 +207,9 @@ public class PlayerHealthSystem : MonoBehaviour
 	IEnumerator PlayerDied()
 	{
 		// Player is dead. Do stuff.. play anim, sound..
-		PopupText.Instance.Popup("You have died!", 1f, 1f); // Demo stuff!
+		//PopupText.Instance.Popup("You have died!", 1f, 1f); // Demo stuff!
 
 		yield return null;
 	}
+
 }
