@@ -131,6 +131,10 @@ public class GamePlay : MonoBehaviour
         IPHostEntry host = Dns.GetHostEntry(hostname);
         //m_serverAddress = adrList[0].ToString();
         m_serverAddress = host.AddressList.FirstOrDefault(a => a.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork).ToString();
+<<<<<<< HEAD
+=======
+
+>>>>>>> 7fb56bc7184f8e6fd74cd584697e9a1074cc8de6
 
         actionSelect = m_actionSelect.GetComponent<ActionSelect>();
     }
@@ -391,7 +395,7 @@ public class GamePlay : MonoBehaviour
                         }
 
                     }
-                    
+
                 }
 
             }
@@ -449,7 +453,7 @@ public class GamePlay : MonoBehaviour
             Debug.Log("Opponent Action:" + m_inputData[m_playerId ^ 1].attackInfo.actionKind.ToString() +
                       ",  Damage:" + m_inputData[m_playerId ^ 1].attackInfo.damageValue);
         }
-        
+
 
         /*
         Debug.Log("Own Action:" + m_inputData[m_playerId].attackInfo.actionKind.ToString() +
