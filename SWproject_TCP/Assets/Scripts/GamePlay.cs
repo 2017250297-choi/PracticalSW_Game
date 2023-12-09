@@ -200,7 +200,7 @@ public class GamePlay : MonoBehaviour
             Rect labelRect = new Rect(px, py + 80, 200, 30);
             GUIStyle style = new GUIStyle();
             style.fontStyle = FontStyle.Bold;
-            style.normal.textColor = Color.black;
+            style.normal.textColor = Color.white;
             GUI.Label(labelRect, "상대방 IP 주소", style);
             m_serverAddress = GUI.TextField(new Rect(px, py + 95, 200, 30), m_serverAddress);
 
