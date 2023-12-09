@@ -110,7 +110,7 @@ public class GamePlay : MonoBehaviour
         IPHostEntry host = Dns.GetHostEntry(hostname);
         //m_serverAddress = adrList[0].ToString();
         m_serverAddress = host.AddressList.FirstOrDefault(a => a.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork).ToString();
-        
+
 
         actionSelect = m_actionSelect.GetComponent<ActionSelect>();
     }
@@ -335,7 +335,7 @@ public class GamePlay : MonoBehaviour
                         send_validDamage = damage; // damage 값만큼의 유효타가 들어갔음을 전송해서 알림
                         m_myPlayerScript.getHit(damage);
                     }
-                    
+
                 }
 
             }
@@ -377,7 +377,7 @@ public class GamePlay : MonoBehaviour
             m_isSendAction = true; // 송신 성공
         }
 
-        
+
 
         // 공격/회피 시에만 로그 찍도록
         if (m_inputData[m_playerId].attackInfo.actionKind == ActionKind.Attack ||
@@ -393,7 +393,7 @@ public class GamePlay : MonoBehaviour
             Debug.Log("Opponent Action:" + m_inputData[m_playerId ^ 1].attackInfo.actionKind.ToString() +
                       ",  Damage:" + m_inputData[m_playerId ^ 1].attackInfo.damageValue);
         }
-        
+
 
         /*
         Debug.Log("Own Action:" + m_inputData[m_playerId].attackInfo.actionKind.ToString() +
