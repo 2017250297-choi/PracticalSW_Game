@@ -77,6 +77,18 @@ public class TransportTCP : MonoBehaviour
     }
 
 
+    // 스레드 종료
+    public void StopThread()
+    {
+        m_threadLoop = false;
+        if (m_thread != null)
+        {
+            m_thread.Join(); // 다른 스레드가 종료될 때까지 기다림
+            m_thread = null;
+        }
+    }
+
+
     // 대기 종료
     public void StopServer()
     {

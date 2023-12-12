@@ -179,6 +179,8 @@ MonoBehaviour:
   countdown_2: {fileID: 21300000, guid: ba552da44c8ad264989dbe4b98474a00, type: 3}
   countdown_1: {fileID: 21300000, guid: 0d2c75fcef5902149aee926251f78f22, type: 3}
   countdown_Start: {fileID: 21300000, guid: cd97641bec8e04948a4c01524b5b380f, type: 3}
+  m_retryButtonPrefab: {fileID: 2107397907989621541, guid: 05a74fc2db172c74aa4fa805f535b54a, type: 3}
+  m_connectionLostButtonPrefab: {fileID: 9106599169384411397, guid: bc52b2ae7d225844c98095e24385ba76, type: 3}
 --- !u!1 &273995151
 GameObject:
   m_ObjectHideFlags: 0

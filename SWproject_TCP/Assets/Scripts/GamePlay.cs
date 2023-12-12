@@ -25,7 +25,6 @@ public class GamePlay : MonoBehaviour
     public Sprite m_winImage;
     public Sprite m_loseImage;
 
-
     const int PLAYER_NUM = 2;
     GameObject m_serverPlayer; // 자주 사용하므로 확보
     GameObject m_clientPlayer; // 자주 사용하므로 확보
@@ -41,8 +40,9 @@ public class GamePlay : MonoBehaviour
     string m_serverAddress;
 
     int m_playerId = 0;
-    int[] m_hp = new int[PLAYER_NUM]; // 서로의 체력
+    //int[] m_hp = new int[PLAYER_NUM]; // 서로의 체력
     Winner m_actionWinner = Winner.None;
+    float enemyPos = 0.0f;
     bool m_isGameOver = false;
 
     // 공격/회피 송수신 대기용
@@ -67,6 +67,10 @@ public class GamePlay : MonoBehaviour
 
     // 결과 발표 코루틴용
     bool m_isResulted;
+
+    // Retry 버튼 프리팹
+    public Button m_retryButtonPrefab;
+    public Button m_connectionLostButtonPrefab;
 
 
     // 게임 진행 상황
@@ -107,10 +111,12 @@ public class GamePlay : MonoBehaviour
         // 아직 동작시키지 않음
         m_gameState = GameState.None;
 
+        /*
         for (int i = 0; i < m_hp.Length; ++i)
         {
             m_hp[i] = 100; // 체력바 우선 100으로 통일
         }
+        */
 
         // 통신 모듈 작성
         GameObject go = new GameObject("Network");
@@ -121,7 +127,7 @@ public class GamePlay : MonoBehaviour
             {
                 transport.RegisterEventHandler(EventCallback);
             }
-            DontDestroyOnLoad(go);
+            //DontDestroyOnLoad(go);
         }
 
         // 호스트명 가져오기
@@ -131,12 +137,8 @@ public class GamePlay : MonoBehaviour
         IPHostEntry host = Dns.GetHostEntry(hostname);
         //m_serverAddress = adrList[0].ToString();
         m_serverAddress = host.AddressList.FirstOrDefault(a => a.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork).ToString();
-<<<<<<< HEAD
-=======
 
->>>>>>> 7fb56bc7184f8e6fd74cd584697e9a1074cc8de6
-
-        actionSelect = m_actionSelect.GetComponent<ActionSelect>();
+        //actionSelect = m_actionSelect.GetComponent<ActionSelect>();
     }
 
     // Update is called once per frame
@@ -158,16 +160,19 @@ public class GamePlay : MonoBehaviour
                 if (!m_isCountdown)
                 {
                     m_isCountdown = true;
+
+                    m_myPlayer = (m_playerId == 0) ? m_serverPlayer : m_clientPlayer;
+                    m_opponentPlayer = (m_playerId == 1) ? m_serverPlayer : m_clientPlayer;
+                    m_myPlayerScript = m_myPlayer.GetComponent<Player>();
+                    m_opponentPlayerScript = m_opponentPlayer.GetComponent<Player>();
+
+                    m_myPlayerScript.GetOpponentPlayer(m_playerId); // 내 플레이어 오브젝트의 스크립트에서 상대방의 플레이어 오브젝트에 접근하게 해줌
+
                     StartCoroutine(CountdownCoroutine());
                 }
-
                 break;
 
             case GameState.Action:
-                m_myPlayer = (m_playerId == 0) ? m_serverPlayer : m_clientPlayer;
-                m_opponentPlayer = (m_playerId == 1) ? m_serverPlayer : m_clientPlayer;
-                m_myPlayerScript = m_myPlayer.GetComponent<Player>();
-                m_opponentPlayerScript = m_opponentPlayer.GetComponent<Player>();
                 UpdateAction();
                 break;
 
@@ -246,7 +251,6 @@ public class GamePlay : MonoBehaviour
                 m_clientPlayer = Instantiate(m_clientPlayerPrefab) as GameObject;
                 m_clientPlayer.name = m_clientPlayerPrefab.name;
 
-
                 GameObject.Find("Title").SetActive(false);
 
                 Debug.Log("클라이언트 접속");
@@ -319,10 +323,9 @@ public class GamePlay : MonoBehaviour
         m_isSendAction = false;
         m_isReceiveAction = false;
         short send_validDamage = 0;
-        
+        //enemyPos = m_opponentPlayer.transform.position.x; // 상대방 플레이어의 위치를 가져옴
 
         //ActionSelect actionSelect = m_actionSelect.GetComponent<ActionSelect>();
-
 
         // 상대방의 액션 수신부터 함
         if (m_isReceiveAction == false)
@@ -345,16 +348,16 @@ public class GamePlay : MonoBehaviour
                 if (validDamage > 100)
                 {
                     // validDamage가 100 이상의 값이라고 왔다면, 사망한 상태임을 알리는 것.
-                    m_opponentPlayerScript.getHit(validDamage);
+                    m_isGameOver = m_opponentPlayerScript.getHit(validDamage);
                     isWinner = true;
                     StartCoroutine(m_opponentPlayerScript.PlayerDied()); // 플레이어 사망 코루틴 실행
                     m_gameState = GameState.Result;
-                    m_isGameOver = true;
+                    //m_isGameOver = true;
                 }
                 else if (validDamage > 0)
                 {
                     // 내 공격이 유효타였다면, 상대방 오브젝트의 hp를 깎는다
-                    m_opponentPlayerScript.getHit(validDamage);
+                    m_isGameOver = m_opponentPlayerScript.getHit(validDamage);
                 }
 
                 // 여기도 마찬가지로 수정 자유롭게...
@@ -375,12 +378,12 @@ public class GamePlay : MonoBehaviour
                 // 즉, Attack을 받은 쪽에서 공격 성공/실패를 판정하자! (나중에 서버가 모두 판정하는 식으로 바꿀 수도 있을 것 같음)
                 if (action == ActionKind.Attack) // 상대방 액션이 공격이면
                 {
-                    State myState = actionSelect.GetState(); // 내 상태를 가져옴
+                    State myState = m_myPlayerScript.GetState(); // 내 상태를 가져옴
                     if (myState == State.Dodging) // 내가 회피 중이라면 공격을 무효 처리함
                     {
                         send_validDamage = 0;
                     }
-                    else
+                    else // 나의 피격
                     {
                         isDead = m_myPlayerScript.getHit(damage);
                         send_validDamage = damage; // damage 값만큼의 유효타가 들어갔음을 전송해서 알림
@@ -414,15 +417,17 @@ public class GamePlay : MonoBehaviour
         // 수신받은 정보 토대로 판정 후 송신
         if (m_isSendAction == false)
         {
-            actionSelect.UpdateSelectAction();
+            m_myPlayerScript.UpdateSelectAction();
 
             // 입력키(마우스클릭)에 따른 액션 선택을 가져옴
-            ActionKind action = actionSelect.GetActionKind();
-            State state = actionSelect.GetState(); // 이 부분은 달라지도록 할 수 있음. 마우스 클릭을 하지 않아도 스턴이나 공격/회피중 상태는 몇 초간 유지되어야 함. 코드 수정해주세요!
-            short damage = actionSelect.GetDamage();
-
+            ActionKind action = m_myPlayerScript.GetActionKind();
+            State state = m_myPlayerScript.GetState(); // 이 부분은 달라지도록 할 수 있음. 마우스 클릭을 하지 않아도 스턴이나 공격/회피중 상태는 몇 초간 유지되어야 함. 코드 수정해주세요!
+            short damage = m_myPlayerScript.GetDamage();
+            
             // 스턴 상태거나, 공격/회피중인 상태라면 action과 damage가 캔슬되어야 합니다.
             // 즉 inputData에 정보값을 담기 전, action = ActionKind.None, damage = 0으로 설정 후 값을 담아야 합니다. 코드 수정해주세요!
+            
+
             m_inputData[m_playerId].attackInfo.actionKind = action;
             m_inputData[m_playerId].attackInfo.playerState = state;
             m_inputData[m_playerId].attackInfo.damageValue = damage;
@@ -521,6 +526,7 @@ public class GamePlay : MonoBehaviour
         //GameObject obj = GameObject.Find("FinalResult");
         //if (obj == null) { return; }
 
+        /*
         Rect r = new Rect(Screen.width / 2 - 50, Screen.height - 60, 100, 50);
         if (GUI.Button(r, "Retry"))
         {
@@ -535,6 +541,17 @@ public class GamePlay : MonoBehaviour
             // 생성한 오브젝트를 Destroy하는 코드를 추가한 후 LoadScene을 마지막에 해야 할 것 같다. Initiate의 문제일 수 있다는 듯.
             // 다른 스크립트에서 Start()를 사용하는지도 찾아보자.
         }
+        
+        */
+        Button button = Instantiate(m_retryButtonPrefab, GameObject.Find("Canvas").transform);
+        button.onClick.AddListener(retryClick);
+        
+    }
+
+    void retryClick()
+    {
+        m_isGameOver = true;
+        SceneManager.LoadScene(0);
     }
 
     // 이벤트 발생 시 콜백 함수
@@ -555,6 +572,7 @@ public class GamePlay : MonoBehaviour
     // 연결 끊김 알림
     void NotifyDisconnection()
     {
+        /*
         GUISkin skin = GUI.skin;
         GUIStyle style = new GUIStyle(GUI.skin.GetStyle("button"));
         style.normal.textColor = Color.white;
@@ -579,5 +597,15 @@ public class GamePlay : MonoBehaviour
             // 씬 변환하는 코드 아래에 추가
             SceneManager.LoadScene(0);
         }
+        */
+        
+        if (m_playerId == 0)
+        {
+            m_networkController.CloseServer();
+        }
+
+        Button button = Instantiate(m_connectionLostButtonPrefab, GameObject.Find("Canvas").transform);
+        button.onClick.AddListener(retryClick);
+        
     }
 }
