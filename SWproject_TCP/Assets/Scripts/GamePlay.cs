@@ -431,6 +431,7 @@ public class GamePlay : MonoBehaviour
             m_inputData[m_playerId].attackInfo.actionKind = action;
             m_inputData[m_playerId].attackInfo.playerState = state;
             m_inputData[m_playerId].attackInfo.damageValue = damage;
+            m_inputData[m_playerId].attackInfo.validDamage = send_validDamage;
 
             // 상대방에게 전송
             m_networkController.SendActionData(action, state, damage, send_validDamage);
