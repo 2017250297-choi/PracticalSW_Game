@@ -167,7 +167,7 @@ public class GamePlay : MonoBehaviour
                     m_opponentPlayerScript = m_opponentPlayer.GetComponent<Player>();
 
                     m_myPlayerScript.GetOpponentPlayer(m_playerId); // 내 플레이어 오브젝트의 스크립트에서 상대방의 플레이어 오브젝트에 접근하게 해줌
-
+                    m_opponentPlayerScript.GetOpponentPlayer(m_playerId ^ 1);
                     StartCoroutine(CountdownCoroutine());
                 }
                 break;
@@ -344,7 +344,8 @@ public class GamePlay : MonoBehaviour
                 State state = m_inputData[m_playerId ^ 1].attackInfo.playerState;
                 short damage = m_inputData[m_playerId ^ 1].attackInfo.damageValue;
                 short validDamage = m_inputData[m_playerId ^ 1].attackInfo.validDamage;
-
+                if(validDamage > 0)
+                Debug.Log(validDamage);
                 if (validDamage > 100)
                 {
                     // validDamage가 100 이상의 값이라고 왔다면, 사망한 상태임을 알리는 것.
@@ -435,7 +436,8 @@ public class GamePlay : MonoBehaviour
 
             // 상대방에게 전송
             m_networkController.SendActionData(action, state, damage, send_validDamage);
-
+            if(damage>0)
+            Debug.Log(damage);
             // 자신의 애니메이션을 공격/회피에 맞게 변형
             // 이 부분도 스턴 or 공격/회피중 상태라면 그 애니메이션을 유지하고, 아래 코드는 캔슬되어야 합니다.
             m_myPlayerScript.ChangeAnimationAction(action);

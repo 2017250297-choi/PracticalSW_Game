@@ -11,7 +11,7 @@ public enum State // 캐릭터 상태
     None, // 기본 상태
     Attacking, // 공격 중
     Dodging, // 회피 중
-    Stun, // 회피 실패(=피격, 스턴)
+    Stun, // 회피 실패(=피격, 스턴==공격실패)
     Dead, // 사망
 }
 
@@ -134,10 +134,10 @@ public class Player : MonoBehaviour
 
         Vector3 origin = transform.position;
         Vector3 newPos = origin;
-
         while (temp < attackDelay)
         {
             temp += Time.deltaTime * attackSpeed;
+            
             enemyPos = m_opponentPlayer.transform.position.x;
 
             // 여기서 그냥 enemyPos - transform.position.x 해줘도 왼쪽/오른쪽 상관 없나?
@@ -164,7 +164,7 @@ public class Player : MonoBehaviour
         Debug.Log("End Attack");
 
         m_state = State.None; // 돌아가기 전에 Attacking 상태를 해제해야 하나?
-        m_selected = ActionKind.None; // 상태 선택 중 해제
+        //m_selected = ActionKind.None; // 상태 선택 중 해제
     }
 
     public void Dodge()
@@ -216,7 +216,7 @@ public class Player : MonoBehaviour
         globalCoolDown = 0.0f;
 
         m_state = State.None;
-        m_selected = ActionKind.None;
+        //m_selected = ActionKind.None;
     }
 
 
@@ -278,6 +278,7 @@ public class Player : MonoBehaviour
         m_damage = 0;
 
         originPos = transform.position.x;
+        enemyPos = m_opponentPlayer.transform.position.x;
 
         isHostConstant = (originPos > 0) ? -1 : 1;
     }
@@ -285,6 +286,7 @@ public class Player : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        
         /*
         switch (m_currentMotion)
         {
@@ -309,11 +311,13 @@ public class Player : MonoBehaviour
         {
             //Attack();
             StartCoroutine(AttackCoroutine());
+            //m_selected = ActionKind.None;
         }
         else if (action == ActionKind.Dodge)
         {
             //Dodge();
             StartCoroutine(DodgeCoroutine());
+            //m_selected = ActionKind.None;
         }
     }
 
@@ -325,21 +329,21 @@ public class Player : MonoBehaviour
         if (m_selected == ActionKind.None) // 현재 선택해서 실행 중인 액션이 없을 때만 키 입력 값 받음
         {
 
-            if (Input.GetMouseButtonDown(0)) // 좌클릭 시 공격
+            if (Input.GetMouseButtonDown(0) && m_state == State.None) // 좌클릭 시 공격
             {
                 m_selected = ActionKind.Attack;
-                m_state = State.None; // Attacking이 아닌 이유: 타이밍을 맞추기 위해 정확히 칼을 휘두르는 시점에 State.Attacking을 적용하고, 그것을 비교하도록 함
+                //m_state = State.None; // Attacking이 아닌 이유: 타이밍을 맞추기 위해 정확히 칼을 휘두르는 시점에 State.Attacking을 적용하고, 그것을 비교하도록 함
                 m_damage = 0;
 
-                StartCoroutine(AttackCoroutine());
+                //StartCoroutine(AttackCoroutine());
             }
-            else if (Input.GetMouseButtonDown(1)) // 우클릭 시 회피
+            else if (Input.GetMouseButtonDown(1) && m_state == State.None) // 우클릭 시 회피
             {
                 m_selected = ActionKind.Dodge;
-                m_state = State.None;
+                //m_state = State.None;
                 m_damage = 0;
 
-                StartCoroutine(DodgeCoroutine());
+                //StartCoroutine(DodgeCoroutine());
             }
             else
             {
@@ -350,6 +354,8 @@ public class Player : MonoBehaviour
                 m_damage = 0;
             }
         }
+        else
+            m_selected =ActionKind.None;
 
     }
 
