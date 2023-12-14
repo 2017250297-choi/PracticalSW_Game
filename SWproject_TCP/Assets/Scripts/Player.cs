@@ -1,4 +1,4 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
@@ -82,7 +82,9 @@ public class Player : MonoBehaviour
     GameObject m_opponentPlayer; // 상대방 플레이어 오브젝트
     Player m_opponentPlayerScript; // 상대방 플레이어의 스크립트
 
-    int isHostConstant = 1;
+    // 데미지 텍스트
+    public GameObject hitDamageText;
+    public GameObject damagePos;
 
 
     public void GetOpponentPlayer(int m_playerId)
@@ -128,7 +130,7 @@ public class Player : MonoBehaviour
     {
         float temp = 0.0f;
         globalCoolDown = 3.0f;
-        m_state = State.Attacking;
+        //m_state = State.Attacking;
         m_damage = 0;
         Debug.Log("Start Attack");
 
@@ -233,6 +235,10 @@ public class Player : MonoBehaviour
 
     public bool getHit(short damage)
     {
+        GameObject damageText = Instantiate(hitDamageText); // 텍스트 생성
+        damageText.transform.position = damagePos.transform.position; // 표시될 위치
+        damageText.GetComponent<DamageText>().damage = damage; // 데미지 전달
+
         m_animator.SetTrigger("Hurt");
         isDead = healthSystem.TakeDamage((float)damage);
         Debug.Log(healthSystem.hitPoint);
@@ -281,6 +287,7 @@ public class Player : MonoBehaviour
         enemyPos = m_opponentPlayer.transform.position.x;
 
         isHostConstant = (originPos > 0) ? -1 : 1;
+        damagePos.transform.position = transform.GetChild(0).transform.position; // 데미지 텍스트가 표시될 위치
     }
 
     // Update is called once per frame
