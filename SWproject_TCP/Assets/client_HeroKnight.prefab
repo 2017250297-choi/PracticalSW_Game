@@ -197,8 +197,8 @@ MonoBehaviour:
   reloadSpeed: 2
   dodgeSpeed: 2
   isDead: 0
-  hitDamageText: {fileID: 0}
-  damagePos: {fileID: 0}
+  hitDamageText: {fileID: 5279907106175804356, guid: 6c14774d293396e4d9fd2fb5d7ba2aa9, type: 3}
+  damagePos: {fileID: 1185538328688958957}
 --- !u!212 &2954181336601895002
 SpriteRenderer:
   m_ObjectHideFlags: 0

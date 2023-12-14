@@ -84,7 +84,7 @@ public class Player : MonoBehaviour
 
     // 데미지 텍스트
     public GameObject hitDamageText;
-    public Transform damagePos;
+    public GameObject damagePos;
 
 
     public void GetOpponentPlayer(int m_playerId)
@@ -236,7 +236,7 @@ public class Player : MonoBehaviour
     public bool getHit(short damage)
     {
         GameObject damageText = Instantiate(hitDamageText); // 텍스트 생성
-        damageText.transform.position = damagePos.position; // 표시될 위치
+        damageText.transform.position = damagePos.transform.position; // 표시될 위치
         damageText.GetComponent<DamageText>().damage = damage; // 데미지 전달
 
         m_animator.SetTrigger("Hurt");
@@ -284,7 +284,7 @@ public class Player : MonoBehaviour
         m_damage = 0;
 
         originPos = transform.position.x;
-        damagePos.position = transform.GetChild(0).transform.position; // 데미지 텍스트가 표시될 위치
+        damagePos.transform.position = transform.GetChild(0).transform.position; // 데미지 텍스트가 표시될 위치
     }
 
     // Update is called once per frame
