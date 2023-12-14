@@ -286,7 +286,6 @@ public class Player : MonoBehaviour
         originPos = transform.position.x;
         enemyPos = m_opponentPlayer.transform.position.x;
 
-        isHostConstant = (originPos > 0) ? -1 : 1;
         damagePos.transform.position = transform.GetChild(0).transform.position; // 데미지 텍스트가 표시될 위치
     }
 
