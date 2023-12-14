@@ -130,7 +130,7 @@ public class Player : MonoBehaviour
     {
         float temp = 0.0f;
         globalCoolDown = 3.0f;
-        //m_state = State.Attacking;
+        m_state = State.Attacking;
         m_damage = 0;
         Debug.Log("Start Attack");
 
@@ -153,9 +153,9 @@ public class Player : MonoBehaviour
         m_currentAttack = (m_currentAttack + 1) % 3 + 1;
         m_animator.SetTrigger("Attack" + m_currentAttack);
         m_damage = (short)Random.Range(5, 21); // 공격 데미지 랜덤하게
-
-        yield return new WaitForSeconds(0.06f);
-
+        yield return null;
+        m_damage = 0;
+        yield return new WaitForSeconds(0.06f-Time.deltaTime);
         temp = 0.0f;
         while (globalCoolDown > temp)
         {
@@ -339,7 +339,7 @@ public class Player : MonoBehaviour
             {
                 m_selected = ActionKind.Attack;
                 //m_state = State.None; // Attacking이 아닌 이유: 타이밍을 맞추기 위해 정확히 칼을 휘두르는 시점에 State.Attacking을 적용하고, 그것을 비교하도록 함
-                m_damage = 0;
+                //m_damage = 0;
 
                 //StartCoroutine(AttackCoroutine());
             }
@@ -347,17 +347,17 @@ public class Player : MonoBehaviour
             {
                 m_selected = ActionKind.Dodge;
                 //m_state = State.None;
-                m_damage = 0;
+                //m_damage = 0;
 
                 //StartCoroutine(DodgeCoroutine());
             }
             else
             {
-                m_selected = ActionKind.None;
-                m_state = State.None; // 이 부분은 ActionKind를 선택하지 않아도 스턴 or 사망 상태일 수 있음. 적절하게 수정되어야 함.
+                //m_selected = ActionKind.None;
+                //m_state = State.None; // 이 부분은 ActionKind를 선택하지 않아도 스턴 or 사망 상태일 수 있음. 적절하게 수정되어야 함.
                                       // m_stuned 같은 bool 변수를 추가해서, GamePlay에서 그 값을 넘겨받고 그에 따라 m_state를 변경해주면 좋을 것 같음
                                       // 아니면 코루틴으로 시간 지연
-                m_damage = 0;
+                //m_damage = 0;
             }
         }
         else

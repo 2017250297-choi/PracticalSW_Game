@@ -320,6 +320,7 @@ public class GamePlay : MonoBehaviour
     // 공격/회피 선택(실행)
     void UpdateAction()
     {
+        Debug.Log("NEWFRAME");
         m_isSendAction = false;
         m_isReceiveAction = false;
         short send_validDamage = 0;
@@ -344,8 +345,8 @@ public class GamePlay : MonoBehaviour
                 State state = m_inputData[m_playerId ^ 1].attackInfo.playerState;
                 short damage = m_inputData[m_playerId ^ 1].attackInfo.damageValue;
                 short validDamage = m_inputData[m_playerId ^ 1].attackInfo.validDamage;
-                if(validDamage > 0)
-                Debug.Log(validDamage);
+
+                //Debug.Log(validDamage);
                 if (validDamage > 100)
                 {
                     // validDamage가 100 이상의 값이라고 왔다면, 사망한 상태임을 알리는 것.
@@ -377,7 +378,8 @@ public class GamePlay : MonoBehaviour
                 // 공격 실패 시 validDamage=0으로 전송 -> A는 패킷을 받아 상대방 체력바에서 10을 깎음
                 // 이렇게 구현하면 어떨까 합니다
                 // 즉, Attack을 받은 쪽에서 공격 성공/실패를 판정하자! (나중에 서버가 모두 판정하는 식으로 바꿀 수도 있을 것 같음)
-                if (action == ActionKind.Attack) // 상대방 액션이 공격이면
+
+                if (damage>0&&state==State.Attacking) // 상대방 액션이 공격이면
                 {
                     State myState = m_myPlayerScript.GetState(); // 내 상태를 가져옴
                     if (myState == State.Dodging) // 내가 회피 중이라면 공격을 무효 처리함
@@ -402,18 +404,25 @@ public class GamePlay : MonoBehaviour
 
                 }
 
+
+
+
             }
             else
             {
                 // 상대방 입력이 없는 상태
                 m_inputData[m_playerId ^ 1].attackInfo.actionKind = ActionKind.None;
-                m_inputData[m_playerId ^ 1].attackInfo.playerState = State.None;
+                //m_inputData[m_playerId ^ 1].attackInfo.playerState = State.None;
                 m_inputData[m_playerId ^ 1].attackInfo.damageValue = 0;
                 m_inputData[m_playerId ^ 1].attackInfo.validDamage = 0;
                 m_isReceiveAction = true; // 수신 성공으로 침
-            }
-        }
+                Debug.Log("FAIL");
 
+            }
+            if(m_inputData[m_playerId ^ 1].attackInfo.playerState !=State.None)
+            Debug.Log(m_inputData[m_playerId ^ 1].attackInfo.playerState);
+        }
+        
 
         // 수신받은 정보 토대로 판정 후 송신
         if (m_isSendAction == false)
