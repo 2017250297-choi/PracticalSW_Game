@@ -73,7 +73,7 @@ public class Player : MonoBehaviour
     private float originPos;
     private float enemyPos;
 
-    private float attackDelay = 2.0f;
+    private float attackDelay = 0.4f;
     public float attackSpeed = 2.0f;
     public float reloadSpeed = 2.0f;
     public float dodgeSpeed = 2.0f;
@@ -128,7 +128,7 @@ public class Player : MonoBehaviour
 
     IEnumerator StunCoroutine()
     {
-        float stunTime = 2.0f;
+        float stunTime = 0.5f;
         float temp = 0f;
         m_state = State.Stun;
 
@@ -143,7 +143,7 @@ public class Player : MonoBehaviour
     IEnumerator AttackCoroutine()
     {
         float temp = 0.0f;
-        globalCoolDown = 3.0f;
+        globalCoolDown = 1.0f;
         m_state = State.Attacking;
         m_damage = 0;
         Debug.Log("Start Attack");
@@ -201,8 +201,8 @@ public class Player : MonoBehaviour
 
     IEnumerator DodgeCoroutine()
     {
-        float invincibleTime = 5f;
-        globalCoolDown = 1.0f;
+        float invincibleTime = 0.8f;
+        globalCoolDown = 0.5f;
         m_state = State.Dodging;
         m_damage = 0;
         float temp = 0.0f;
