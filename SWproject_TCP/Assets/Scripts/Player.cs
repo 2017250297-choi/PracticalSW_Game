@@ -11,6 +11,7 @@ public enum State // 캐릭터 상태
     None, // 기본 상태
     Attacking, // 공격 중
     Dodging, // 회피 중
+    Reloading,//회피 후 무방비한상
     Stun, // 회피 실패(=피격, 스턴==공격실패)
     Dead, // 사망
 }
@@ -136,11 +137,11 @@ public class Player : MonoBehaviour
 
         Vector3 origin = transform.position;
         Vector3 newPos = origin;
+        enemyPos = m_opponentPlayer.transform.position.x;
         while (temp < attackDelay)
         {
             temp += Time.deltaTime * attackSpeed;
             
-            enemyPos = m_opponentPlayer.transform.position.x;
 
             // 여기서 그냥 enemyPos - transform.position.x 해줘도 왼쪽/오른쪽 상관 없나?
             // 상관 있는 듯... 아래 코드 수정하기
@@ -184,29 +185,28 @@ public class Player : MonoBehaviour
 
     IEnumerator DodgeCoroutine()
     {
-        float invincibleTime = 0.04f;
+        float invincibleTime = 5f;
         globalCoolDown = 1.0f;
         m_state = State.Dodging;
         m_damage = 0;
         float temp = 0.0f;
-
+        enemyPos = m_opponentPlayer.transform.position.x;
         m_rolling = true;
-        m_rollCurrentTime = 0.0f;
         m_animator.SetTrigger("Roll");
-        Vector3 origin = transform.position;
-        Vector3 newPos = origin;
         Debug.Log("Start Dodge");
-
+        float dist = Mathf.Sign(transform.position.x - enemyPos)*5;
+        Debug.Log(dist / (invincibleTime / Time.deltaTime));
         while (temp < invincibleTime)
         {
             temp += Time.deltaTime;
             if (m_rolling)
             {
-                m_body2d.velocity = new Vector2(-10f * m_speed, m_body2d.velocity.y);
+                m_body2d.velocity = new Vector2(dist, m_body2d.velocity.y);
             }
             yield return null;
         }
-
+        m_rolling = false;
+        m_state = State.Reloading;
         temp = 0.0f;
 
         while (globalCoolDown > temp)
@@ -326,8 +326,6 @@ public class Player : MonoBehaviour
             //m_selected = ActionKind.None;
         }
     }
-
-
 
     // 아직 액션을 취하기 전
     public void UpdateSelectAction()

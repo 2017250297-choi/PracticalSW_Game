@@ -320,7 +320,7 @@ public class GamePlay : MonoBehaviour
     // 공격/회피 선택(실행)
     void UpdateAction()
     {
-        Debug.Log("NEWFRAME");
+        //Debug.Log("NEWFRAME");
         m_isSendAction = false;
         m_isReceiveAction = false;
         short send_validDamage = 0;
@@ -416,7 +416,7 @@ public class GamePlay : MonoBehaviour
                 m_inputData[m_playerId ^ 1].attackInfo.damageValue = 0;
                 m_inputData[m_playerId ^ 1].attackInfo.validDamage = 0;
                 m_isReceiveAction = true; // 수신 성공으로 침
-                Debug.Log("FAIL");
+                //Debug.Log("FAIL");
 
             }
             if(m_inputData[m_playerId ^ 1].attackInfo.playerState !=State.None)
