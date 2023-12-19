@@ -11,6 +11,7 @@ public class DamageText : MonoBehaviour
 
     TextMeshPro text;
     Color alpha;
+    public short cases;
     public short damage;
 
     // Start is called before the first frame update
@@ -22,7 +23,20 @@ public class DamageText : MonoBehaviour
 
         text = GetComponent<TextMeshPro>();
         alpha = text.color;
-        text.text = damage.ToString();
+        switch (cases)
+        {
+            case 0:
+                text.text = damage.ToString();
+                break;
+            case 1:
+                text.text = "DODGE";
+                break;
+            case 2:
+                text.text = "STUN!";
+                break;
+        }
+        
+            
         Invoke("DestroyObject", destroyTime);
     }
 

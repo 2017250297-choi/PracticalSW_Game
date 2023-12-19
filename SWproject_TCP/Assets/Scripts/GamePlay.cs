@@ -361,7 +361,8 @@ public class GamePlay : MonoBehaviour
                     // 내 공격이 유효타였다면, 상대방 오브젝트의 hp를 깎는다
                     m_isGameOver = m_opponentPlayerScript.getHit(validDamage);
                 }
-
+                if(validDamage == -1)
+                    m_isGameOver = m_opponentPlayerScript.getHit(-1);
                 // 여기도 마찬가지로 수정 자유롭게...
                 // 상대방의 action이 ActionKind.None이어도, state가 None이 아니라면 그것도 모션으로 반영해주어야 함.
                 // Player.cs에서 state를 인풋으로 해서 애니메이션을 바꾸어주는 ChangeAnimationState(state)를 만들어주고, 여기에 실행하자...
@@ -384,7 +385,8 @@ public class GamePlay : MonoBehaviour
                     State myState = m_myPlayerScript.GetState(); // 내 상태를 가져옴
                     if (myState == State.Dodging) // 내가 회피 중이라면 공격을 무효 처리함
                     {
-                        send_validDamage = 0;
+                        isDead = m_myPlayerScript.getHit(-1);
+                        send_validDamage = -1;
                     }
                     else // 나의 피격
                     {
@@ -419,10 +421,10 @@ public class GamePlay : MonoBehaviour
                 //Debug.Log("FAIL");
 
             }
-            if(m_inputData[m_playerId ^ 1].attackInfo.playerState !=State.None)
-            Debug.Log(m_inputData[m_playerId ^ 1].attackInfo.playerState);
+            //if(m_inputData[m_playerId ^ 1].attackInfo.playerState !=State.None)
+            //Debug.Log(m_inputData[m_playerId ^ 1].attackInfo.playerState);
         }
-        
+
 
         // 수신받은 정보 토대로 판정 후 송신
         if (m_isSendAction == false)
@@ -433,25 +435,33 @@ public class GamePlay : MonoBehaviour
             ActionKind action = m_myPlayerScript.GetActionKind();
             State state = m_myPlayerScript.GetState(); // 이 부분은 달라지도록 할 수 있음. 마우스 클릭을 하지 않아도 스턴이나 공격/회피중 상태는 몇 초간 유지되어야 함. 코드 수정해주세요!
             short damage = m_myPlayerScript.GetDamage();
-            
-            // 스턴 상태거나, 공격/회피중인 상태라면 action과 damage가 캔슬되어야 합니다.
-            // 즉 inputData에 정보값을 담기 전, action = ActionKind.None, damage = 0으로 설정 후 값을 담아야 합니다. 코드 수정해주세요!
-            
 
-            m_inputData[m_playerId].attackInfo.actionKind = action;
-            m_inputData[m_playerId].attackInfo.playerState = state;
-            m_inputData[m_playerId].attackInfo.damageValue = damage;
-            m_inputData[m_playerId].attackInfo.validDamage = send_validDamage;
+            // 이전에 보낸 패킷과 내용이 동일할 시, 패킷을 보내지 않는다
+            if (m_inputData[m_playerId].attackInfo.actionKind == action
+                && m_inputData[m_playerId].attackInfo.playerState == state
+                && m_inputData[m_playerId].attackInfo.damageValue == damage
+                && m_inputData[m_playerId].attackInfo.validDamage == send_validDamage)
+            {
+                m_isSendAction = true; // 송신 성공으로 친다
+            }
+            else
+            {
+                m_inputData[m_playerId].attackInfo.actionKind = action;
+                m_inputData[m_playerId].attackInfo.playerState = state;
+                m_inputData[m_playerId].attackInfo.damageValue = damage;
+                m_inputData[m_playerId].attackInfo.validDamage = send_validDamage;
 
-            // 상대방에게 전송
-            m_networkController.SendActionData(action, state, damage, send_validDamage);
-            if(damage>0)
-            Debug.Log(damage);
-            // 자신의 애니메이션을 공격/회피에 맞게 변형
-            // 이 부분도 스턴 or 공격/회피중 상태라면 그 애니메이션을 유지하고, 아래 코드는 캔슬되어야 합니다.
-            m_myPlayerScript.ChangeAnimationAction(action);
+                // 상대방에게 전송
+                m_networkController.SendActionData(action, state, damage, send_validDamage);
+                if (damage > 0)
+                    Debug.Log(damage);
+                // 자신의 애니메이션을 공격/회피에 맞게 변형
+                // 이 부분도 스턴 or 공격/회피중 상태라면 그 애니메이션을 유지하고, 아래 코드는 캔슬되어야 합니다.
+                m_myPlayerScript.ChangeAnimationAction(action);
 
-            m_isSendAction = true; // 송신 성공
+                m_isSendAction = true; // 송신 성공
+            }
+
         }
 
 
@@ -587,7 +597,7 @@ public class GamePlay : MonoBehaviour
         /*
         GUISkin skin = GUI.skin;
         GUIStyle style = new GUIStyle(GUI.skin.GetStyle("button"));
-        style.normal.textColor = Color.white;
+        style.normaColor = Color.white;
         style.fontSize = 25;
 
         float sx = 450;

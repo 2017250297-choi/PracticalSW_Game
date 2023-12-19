@@ -11,7 +11,7 @@ public enum State // 캐릭터 상태
     None, // 기본 상태
     Attacking, // 공격 중
     Dodging, // 회피 중
-    Reloading,//회피 후 무방비한상
+    Reloading,//회피 후 무방비한상
     Stun, // 회피 실패(=피격, 스턴==공격실패)
     Dead, // 사망
 }
@@ -87,7 +87,6 @@ public class Player : MonoBehaviour
     public GameObject hitDamageText;
     public GameObject damagePos;
 
-
     public void GetOpponentPlayer(int m_playerId)
     {
         if (m_playerId == 0)
@@ -127,6 +126,20 @@ public class Player : MonoBehaviour
 
     }
 
+    IEnumerator StunCoroutine()
+    {
+        float stunTime = 2.0f;
+        float temp = 0f;
+        m_state = State.Stun;
+
+        while(temp < stunTime)
+        {
+            temp += Time.deltaTime;
+            yield return null;
+        }
+        m_state = State.None;
+    }
+
     IEnumerator AttackCoroutine()
     {
         float temp = 0.0f;
@@ -138,7 +151,7 @@ public class Player : MonoBehaviour
         Vector3 origin = transform.position;
         Vector3 newPos = origin;
         enemyPos = m_opponentPlayer.transform.position.x;
-        while (temp < attackDelay)
+        while (temp < attackDelay && m_state==State.Attacking)
         {
             temp += Time.deltaTime * attackSpeed;
             
@@ -148,7 +161,10 @@ public class Player : MonoBehaviour
             m_body2d.velocity = new Vector2((enemyPos - transform.position.x) * m_speed, m_body2d.velocity.y);
             yield return null;
         }
-
+        if(m_state !=State.Attacking)
+        {
+            yield break; 
+        }
         Debug.Log("Attack!");
         m_state = State.Attacking;
         m_currentAttack = (m_currentAttack + 1) % 3 + 1;
@@ -235,15 +251,28 @@ public class Player : MonoBehaviour
 
     public bool getHit(short damage)
     {
-        GameObject damageText = Instantiate(hitDamageText); // 텍스트 생성
-        damageText.transform.position = damagePos.transform.position; // 표시될 위치
-        damageText.GetComponent<DamageText>().damage = damage; // 데미지 전달
 
-        m_animator.SetTrigger("Hurt");
-        isDead = healthSystem.TakeDamage((float)damage);
-        Debug.Log(healthSystem.hitPoint);
+            GameObject damageText = Instantiate(hitDamageText); // 텍스트 생성
+            damageText.transform.position = damagePos.transform.position; // 표시될 위치
+            damageText.GetComponent<DamageText>().cases = 0;
+            damageText.GetComponent<DamageText>().damage = damage; // 데미지 전
+            if (damage==-1)
+            {
 
-        return isDead;
+                damageText.GetComponent<DamageText>().cases = 1;
+                isDead = false;
+            }
+            else
+            {
+                m_animator.SetTrigger("Hurt");
+                StartCoroutine(StunCoroutine());
+                isDead = healthSystem.TakeDamage((float)damage);
+            }
+                
+            Debug.Log(healthSystem.hitPoint);
+
+            return isDead;
+        
     }
 
 
@@ -332,7 +361,14 @@ public class Player : MonoBehaviour
     {
         if (m_selected == ActionKind.None) // 현재 선택해서 실행 중인 액션이 없을 때만 키 입력 값 받음
         {
+            if((Input.GetMouseButtonDown(0) || Input.GetMouseButtonDown(1))&&m_state==State.Stun)
+            {
+                Debug.Log("stuned");
+                GameObject stuned = Instantiate(hitDamageText); // 텍스트 생성
+                stuned.transform.position = damagePos.transform.position; // 표시될 위치
+                stuned.GetComponent<DamageText>().cases = 2;
 
+            }
             if (Input.GetMouseButtonDown(0) && m_state == State.None) // 좌클릭 시 공격
             {
                 m_selected = ActionKind.Attack;
