@@ -1046,18 +1046,16 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   currentHealthBar: {fileID: 5510382442419550054}
-  currentHealthGlobe: {fileID: 1972403611979222780}
   healthText: {fileID: 5510382441472828713}
   hitPoint: 100
   maxHitPoint: 100
   currentManaBar: {fileID: 5510382441600354413}
-  currentManaGlobe: {fileID: 1972403611979222780}
   manaText: {fileID: 5510382442386349951}
   manaPoint: 100
   maxManaPoint: 100
   Regenerate: 1
-  regen: 0.1
-  regenUpdateInterval: 1
+  regen: 0.005
+  regenUpdateInterval: 0.01
   GodMode: 0
 --- !u!1 &5510382442009819812
 GameObject:

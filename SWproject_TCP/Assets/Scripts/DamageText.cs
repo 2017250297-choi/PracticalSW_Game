@@ -26,7 +26,10 @@ public class DamageText : MonoBehaviour
         switch (cases)
         {
             case 0:
-                text.text = damage.ToString();
+                if (damage <= 100)
+                    text.text = damage.ToString();
+                else
+                    text.text = "DEAD!";
                 break;
             case 1:
                 text.text = "DODGE";

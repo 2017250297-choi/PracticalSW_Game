@@ -16,7 +16,15 @@ public enum State // 캐릭터 상태
     Dead, // 사망
 }
 
+public enum MotionState
+{
+    None,
+    Charge,
+    Attack,
+    Dodge,
+    Stun
 
+}
 public class Player : MonoBehaviour
 {
     // public AudioClip m_attackSE; // 공격 시 음향
@@ -40,8 +48,10 @@ public class Player : MonoBehaviour
     ActionKind m_selected; // 공격할지 회피할지 선택
     short m_damage;
     State m_state;
+    MotionState m_motionState=MotionState.None;
 
-
+    //private Sensor_HeroKnight m_wallSensorR1;
+    //private Sensor_HeroKnight m_wallSensorL1;
     [SerializeField] float m_speed = 4.0f;
     [SerializeField] float m_jumpForce = 7.5f;
     [SerializeField] float m_rollForce = 6.0f;
@@ -54,11 +64,6 @@ public class Player : MonoBehaviour
 
     private Animator m_animator;
     private Rigidbody2D m_body2d;
-    private Sensor_HeroKnight m_groundSensor;
-    private Sensor_HeroKnight m_wallSensorR1;
-    private Sensor_HeroKnight m_wallSensorR2;
-    private Sensor_HeroKnight m_wallSensorL1;
-    private Sensor_HeroKnight m_wallSensorL2;
 
     //private bool m_isWallSliding = false;
     private bool m_grounded = false;
@@ -71,10 +76,14 @@ public class Player : MonoBehaviour
     private float m_rollCurrentTime;
     private float globalCoolDown = 0.0f;
     private float originPos;
+    private Vector2 moveforce;
+    private int animCount=0;
+    private int totalFail=0;
+
     private float enemyPos;
 
-    private float attackDelay = 0.4f;
-    public float attackSpeed = 2.0f;
+    private float attackDelay = 0.8f;
+    public float attackSpeed = 1.0f;
     public float reloadSpeed = 2.0f;
     public float dodgeSpeed = 2.0f;
 
@@ -128,9 +137,16 @@ public class Player : MonoBehaviour
 
     IEnumerator StunCoroutine()
     {
+        GameObject damageText = Instantiate(hitDamageText); // 텍스트 생성
+        damageText.transform.position = damagePos.transform.position; // 표시될 위치
+        Vector3 offset = damageText.transform.position;
+        offset.y -= 2;
+        damageText.transform.position = offset;
+        damageText.GetComponent<DamageText>().cases = 2;
         float stunTime = 0.5f;
         float temp = 0f;
         m_state = State.Stun;
+        m_motionState = MotionState.Stun;
 
         while(temp < stunTime)
         {
@@ -138,42 +154,65 @@ public class Player : MonoBehaviour
             yield return null;
         }
         m_state = State.None;
+        m_motionState = MotionState.None;
     }
 
     IEnumerator AttackCoroutine()
     {
+        healthSystem.UseMana(30);
         float temp = 0.0f;
         globalCoolDown = 1.0f;
         m_state = State.Attacking;
+        m_motionState = MotionState.Charge;
         m_damage = 0;
         Debug.Log("Start Attack");
 
         Vector3 origin = transform.position;
         Vector3 newPos = origin;
+        moveforce = new Vector2(m_opponentPlayer.transform.position.x - transform.position.x, 0);
         enemyPos = m_opponentPlayer.transform.position.x;
+        float dist = enemyPos - transform.position.x;
         while (temp < attackDelay && m_state==State.Attacking)
         {
-            temp += Time.deltaTime * attackSpeed;
-            
+            temp += Time.deltaTime;
 
+            if (m_state != State.Attacking)
+            {
+                healthSystem.UseMana(30);
+                yield break;
+            }
             // 여기서 그냥 enemyPos - transform.position.x 해줘도 왼쪽/오른쪽 상관 없나?
             // 상관 있는 듯... 아래 코드 수정하기
-            m_body2d.velocity = new Vector2((enemyPos - transform.position.x) * m_speed, m_body2d.velocity.y);
+            //m_body2d.AddForce(new Vector2(dist*2f, 0));
             yield return null;
         }
         if(m_state !=State.Attacking)
         {
+            healthSystem.UseMana(30);
             yield break; 
         }
         Debug.Log("Attack!");
-        m_state = State.Attacking;
         m_currentAttack = (m_currentAttack + 1) % 3 + 1;
+        m_motionState = MotionState.Attack;
+        healthSystem.UseMana(50);
         m_animator.SetTrigger("Attack" + m_currentAttack);
         m_damage = (short)Random.Range(5, 21); // 공격 데미지 랜덤하게
+        if (m_opponentPlayerScript.m_state == State.Dodging)
+            totalFail += 1;
         yield return null;
         m_damage = 0;
-        yield return new WaitForSeconds(0.06f-Time.deltaTime);
+        yield return new WaitForSeconds(0.6f-Time.deltaTime);
+        if (m_opponentPlayerScript.m_state == State.Dodging)
+            totalFail += 1;
+        if(totalFail==2)
+        {
+            totalFail = 0;
+            StartCoroutine(StunCoroutine());
+            yield break;
+
+        }
         temp = 0.0f;
+        m_motionState = MotionState.None;
         while (globalCoolDown > temp)
         {
             temp += Time.deltaTime * reloadSpeed;
@@ -184,6 +223,7 @@ public class Player : MonoBehaviour
 
         m_state = State.None; // 돌아가기 전에 Attacking 상태를 해제해야 하나?
         //m_selected = ActionKind.None; // 상태 선택 중 해제
+        totalFail = 0;
     }
 
     public void Dodge()
@@ -201,28 +241,24 @@ public class Player : MonoBehaviour
 
     IEnumerator DodgeCoroutine()
     {
+        healthSystem.UseMana(25);
         float invincibleTime = 0.8f;
         globalCoolDown = 0.5f;
         m_state = State.Dodging;
+        m_motionState = MotionState.Dodge;
         m_damage = 0;
         float temp = 0.0f;
         enemyPos = m_opponentPlayer.transform.position.x;
         m_rolling = true;
         m_animator.SetTrigger("Roll");
         Debug.Log("Start Dodge");
-        float dist = Mathf.Sign(transform.position.x - enemyPos)*5;
+        float dist = Mathf.Sign(transform.position.x - enemyPos);
+        moveforce = new Vector2(dist,0);
         Debug.Log(dist / (invincibleTime / Time.deltaTime));
-        while (temp < invincibleTime)
-        {
-            temp += Time.deltaTime;
-            if (m_rolling)
-            {
-                m_body2d.velocity = new Vector2(dist, m_body2d.velocity.y);
-            }
-            yield return null;
-        }
+        yield return new WaitForSeconds(invincibleTime);
         m_rolling = false;
         m_state = State.Reloading;
+        m_motionState = MotionState.None;
         temp = 0.0f;
 
         while (globalCoolDown > temp)
@@ -236,19 +272,6 @@ public class Player : MonoBehaviour
         m_state = State.None;
         //m_selected = ActionKind.None;
     }
-
-
-    public void Jump()
-    {
-        //animation
-        m_animator.SetTrigger("Jump");
-        //set cooltime
-
-        //motion
-
-        //do real Deal
-    }
-
     public bool getHit(short damage)
     {
 
@@ -302,6 +325,8 @@ public class Player : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+        //m_wallSensorR1 = transform.Find("WallSensor_R1").GetComponent<Sensor_HeroKnight>();
+        //m_wallSensorL1 = transform.Find("WallSensor_L1").GetComponent<Sensor_HeroKnight>();
         m_animator = GetComponent<Animator>();
         PlayerHealth = Instantiate(PlayerHealthPrefab, GameObject.Find("Canvas").transform) as GameObject;
         //PlayerHealth.name = this.name;
@@ -321,6 +346,9 @@ public class Player : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        //if (m_wallSensorL1.State()||m_wallSensorR1.State())
+        //    Debug.Log("stuck");
+        
         
         /*
         switch (m_currentMotion)
@@ -337,6 +365,46 @@ public class Player : MonoBehaviour
                 break;
         }
         */
+    }
+    private void FixedUpdate()
+    {
+        if (m_motionState == MotionState.None)
+        {
+            moveforce = new Vector2(originPos - transform.position.x, 0);
+            m_body2d.AddForce(moveforce*1.5f);
+            
+        }
+        else
+        {
+            switch (m_motionState)
+            {
+                case MotionState.Charge:
+                    m_body2d.AddForce(moveforce*5);
+                    break;
+                case MotionState.Dodge:
+                    m_body2d.AddForce(moveforce*20);
+                    break;
+                case MotionState.Stun:
+                    m_body2d.velocity = new Vector2(0, 0);
+                    break;
+                default:
+                    break;
+            }
+
+        }
+        if (-1 < m_body2d.velocity.x && m_body2d.velocity.x < 1 && (m_motionState == MotionState.None|| m_motionState == MotionState.Attack))
+        {
+            m_animator.SetInteger("AnimState", 0);
+        }
+        else
+        {
+            m_animator.SetInteger("AnimState", 1);
+            m_animator.SetBool("Grounded", true);
+
+        }
+        
+         
+        Debug.Log(m_motionState);
     }
 
 
@@ -371,7 +439,15 @@ public class Player : MonoBehaviour
             }
             if (Input.GetMouseButtonDown(0) && m_state == State.None) // 좌클릭 시 공격
             {
-                m_selected = ActionKind.Attack;
+                if(healthSystem.isEnoughMana(80))
+                {
+                    
+                    m_selected = ActionKind.Attack;
+                }
+                else
+                {
+
+                }
                 //m_state = State.None; // Attacking이 아닌 이유: 타이밍을 맞추기 위해 정확히 칼을 휘두르는 시점에 State.Attacking을 적용하고, 그것을 비교하도록 함
                 //m_damage = 0;
 
@@ -379,7 +455,15 @@ public class Player : MonoBehaviour
             }
             else if (Input.GetMouseButtonDown(1) && m_state == State.None) // 우클릭 시 회피
             {
+                if (healthSystem.isEnoughMana(25))
+                {
+
                 m_selected = ActionKind.Dodge;
+                }
+                else
+                {
+
+                }
                 //m_state = State.None;
                 //m_damage = 0;
 
