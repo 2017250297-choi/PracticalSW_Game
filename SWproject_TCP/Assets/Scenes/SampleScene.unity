@@ -180,7 +180,13 @@ MonoBehaviour:
   countdown_1: {fileID: 21300000, guid: 0d2c75fcef5902149aee926251f78f22, type: 3}
   countdown_Start: {fileID: 21300000, guid: cd97641bec8e04948a4c01524b5b380f, type: 3}
   m_retryButtonPrefab: {fileID: 2107397907989621541, guid: 05a74fc2db172c74aa4fa805f535b54a, type: 3}
+  retryButton: {fileID: 0}
   m_connectionLostButtonPrefab: {fileID: 9106599169384411397, guid: bc52b2ae7d225844c98095e24385ba76, type: 3}
+  connectionLostButton: {fileID: 0}
+  m_returnButtonPrefab: {fileID: 2107397907989621541, guid: 037955bd0ca964ba089b7fccf3b051b2, type: 3}
+  returnButton: {fileID: 0}
+  m_exitButtonPrefab: {fileID: 2107397907989621541, guid: e616d4ad89cb745fb8119c9dc644d11c, type: 3}
+  exitButton: {fileID: 0}
 --- !u!1 &273995151
 GameObject:
   m_ObjectHideFlags: 0
@@ -1059,7 +1065,7 @@ SpriteRenderer:
   m_Size: {x: 19.8, y: 10.8}
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
-  m_WasSpriteAssigned: 1
+  m_WasSpriteAssigned: 0
   m_MaskInteraction: 0
   m_SpriteSortPoint: 0
 --- !u!4 &487625838
