@@ -6,8 +6,6 @@ using UnityEngine;
 
 public enum State // 캐릭터 상태
 {
-    //SelectWait, // 선택 대기
-    //Selected, // 선택 종료
     None, // 기본 상태
     Attacking, // 공격 중
     Dodging, // 회피 중
@@ -27,31 +25,15 @@ public enum MotionState
 }
 public class Player : MonoBehaviour
 {
-    // public AudioClip m_attackSE; // 공격 시 음향
-    // public AudioClip m_avoidSE; // 회피 시 음향 
     // 등등... 음향도 여기서 정의
 
     // 애니메이션 정의
 
-    /*
-    public enum Motion
-    {
-        Idle, // 대기 동작
-        Attack, // 공격
-        Avoid, // 회피
-        Hurt, // 데미지 입음
-    };
-
-    Motion m_currentMotion;
-    Animation m_anim; // 이거 안 쓰는 애 같은데? 나중에 코드 읽고 삭제하기
-    */
     ActionKind m_selected; // 공격할지 회피할지 선택
     short m_damage;
     State m_state;
     MotionState m_motionState=MotionState.None;
 
-    //private Sensor_HeroKnight m_wallSensorR1;
-    //private Sensor_HeroKnight m_wallSensorL1;
     [SerializeField] float m_speed = 4.0f;
     [SerializeField] float m_jumpForce = 7.5f;
     [SerializeField] float m_rollForce = 6.0f;
@@ -65,12 +47,10 @@ public class Player : MonoBehaviour
     private Animator m_animator;
     private Rigidbody2D m_body2d;
 
-    //private bool m_isWallSliding = false;
     private bool m_grounded = false;
     private bool m_rolling = false;
     private int m_facingDirection = 1;
     private int m_currentAttack = 0;
-    //private float m_timeSinceAttack = 0.0f;
     private float m_delayToIdle = 0.0f;
     private float m_rollDuration = 0.1f;
     private float m_rollCurrentTime;
@@ -119,22 +99,6 @@ public class Player : MonoBehaviour
     }
 
 
-    public void Attack()
-    {
-        //animation
-        m_currentAttack=(m_currentAttack+1)%3 + 1;
-        m_animator.SetTrigger("Attack"+m_currentAttack);
-        //set cooltime
-
-        //motion
-
-        //do real Deal
-
-
-
-
-    }
-
     IEnumerator StunCoroutine()
     {
         GameObject damageText = Instantiate(hitDamageText); // 텍스트 생성
@@ -159,7 +123,7 @@ public class Player : MonoBehaviour
 
     IEnumerator AttackCoroutine()
     {
-        healthSystem.UseMana(30);
+        healthSystem.UseMana(10);
         float temp = 0.0f;
         globalCoolDown = 1.0f;
         m_state = State.Attacking;
@@ -178,23 +142,20 @@ public class Player : MonoBehaviour
 
             if (m_state != State.Attacking)
             {
-                healthSystem.UseMana(30);
+                healthSystem.UseMana(20);
                 yield break;
             }
-            // 여기서 그냥 enemyPos - transform.position.x 해줘도 왼쪽/오른쪽 상관 없나?
-            // 상관 있는 듯... 아래 코드 수정하기
-            //m_body2d.AddForce(new Vector2(dist*2f, 0));
             yield return null;
         }
         if(m_state !=State.Attacking)
         {
-            healthSystem.UseMana(30);
+            healthSystem.UseMana(20);
             yield break; 
         }
         Debug.Log("Attack!");
         m_currentAttack = (m_currentAttack + 1) % 3 + 1;
         m_motionState = MotionState.Attack;
-        healthSystem.UseMana(50);
+        healthSystem.UseMana(30);
         m_animator.SetTrigger("Attack" + m_currentAttack);
         m_damage = (short)Random.Range(5, 21); // 공격 데미지 랜덤하게
         if (m_opponentPlayerScript.m_state == State.Dodging)
@@ -222,21 +183,9 @@ public class Player : MonoBehaviour
         Debug.Log("End Attack");
 
         m_state = State.None; // 돌아가기 전에 Attacking 상태를 해제해야 하나?
-        //m_selected = ActionKind.None; // 상태 선택 중 해제
         totalFail = 0;
     }
 
-    public void Dodge()
-    {
-        //animation
-        //m_animator.SetTrigger("Dodge");
-        //set cooltime
-
-        //motion
-
-        //do real Deal
-
-    }
 
 
     IEnumerator DodgeCoroutine()
@@ -270,7 +219,6 @@ public class Player : MonoBehaviour
         globalCoolDown = 0.0f;
 
         m_state = State.None;
-        //m_selected = ActionKind.None;
     }
     public bool getHit(short damage)
     {
@@ -314,22 +262,13 @@ public class Player : MonoBehaviour
 
     private void Awake()
     {
-        /*
-        m_currentMotion = Motion.Idle;
-        m_anim = GetComponentInChildren<Animation>();
-
-        m_damage = 0;
-        */
     }
 
     // Start is called before the first frame update
     void Start()
     {
-        //m_wallSensorR1 = transform.Find("WallSensor_R1").GetComponent<Sensor_HeroKnight>();
-        //m_wallSensorL1 = transform.Find("WallSensor_L1").GetComponent<Sensor_HeroKnight>();
         m_animator = GetComponent<Animator>();
         PlayerHealth = Instantiate(PlayerHealthPrefab, GameObject.Find("Canvas").transform) as GameObject;
-        //PlayerHealth.name = this.name;
         healthSystem = PlayerHealth.GetComponent<PlayerHealthSystem>();
         m_body2d = GetComponent<Rigidbody2D>();
 
@@ -346,25 +285,7 @@ public class Player : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        //if (m_wallSensorL1.State()||m_wallSensorR1.State())
-        //    Debug.Log("stuck");
         
-        
-        /*
-        switch (m_currentMotion)
-        {
-            case Motion.Idle: // 대기 모션
-                break;
-            case Motion.Attack:
-                //Attack();
-                break;
-            case Motion.Avoid:
-                //Dodge();
-                break;
-            case Motion.Hurt:
-                break;
-        }
-        */
     }
     private void FixedUpdate()
     {
@@ -412,15 +333,11 @@ public class Player : MonoBehaviour
     {
         if (action == ActionKind.Attack) 
         {
-            //Attack();
             StartCoroutine(AttackCoroutine());
-            //m_selected = ActionKind.None;
         }
         else if (action == ActionKind.Dodge)
         {
-            //Dodge();
             StartCoroutine(DodgeCoroutine());
-            //m_selected = ActionKind.None;
         }
     }
 
@@ -439,19 +356,16 @@ public class Player : MonoBehaviour
             }
             if (Input.GetMouseButtonDown(0) && m_state == State.None) // 좌클릭 시 공격
             {
-                if(healthSystem.isEnoughMana(80))
+                if(healthSystem.isEnoughMana(40))
                 {
                     
                     m_selected = ActionKind.Attack;
                 }
                 else
                 {
-
+                    //mana not enough
                 }
-                //m_state = State.None; // Attacking이 아닌 이유: 타이밍을 맞추기 위해 정확히 칼을 휘두르는 시점에 State.Attacking을 적용하고, 그것을 비교하도록 함
-                //m_damage = 0;
-
-                //StartCoroutine(AttackCoroutine());
+                
             }
             else if (Input.GetMouseButtonDown(1) && m_state == State.None) // 우클릭 시 회피
             {
@@ -462,21 +376,10 @@ public class Player : MonoBehaviour
                 }
                 else
                 {
-
+                    //mana not enough
                 }
-                //m_state = State.None;
-                //m_damage = 0;
-
-                //StartCoroutine(DodgeCoroutine());
             }
-            else
-            {
-                //m_selected = ActionKind.None;
-                //m_state = State.None; // 이 부분은 ActionKind를 선택하지 않아도 스턴 or 사망 상태일 수 있음. 적절하게 수정되어야 함.
-                                      // m_stuned 같은 bool 변수를 추가해서, GamePlay에서 그 값을 넘겨받고 그에 따라 m_state를 변경해주면 좋을 것 같음
-                                      // 아니면 코루틴으로 시간 지연
-                //m_damage = 0;
-            }
+            else{}
         }
         else
             m_selected =ActionKind.None;

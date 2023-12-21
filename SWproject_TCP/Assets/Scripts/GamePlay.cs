@@ -35,11 +35,9 @@ public class GamePlay : MonoBehaviour
     GameState m_gameState = GameState.None;
     InputData[] m_inputData = new InputData[PLAYER_NUM];
     NetworkController m_networkController = null;
-    ActionSelect actionSelect = null;
     string m_serverAddress;
 
     int m_playerId = 0;
-    //int[] m_hp = new int[PLAYER_NUM]; // 서로의 체력
     Winner m_actionWinner = Winner.None;
     float enemyPos = 0.0f;
     bool m_isGameOver = false;
@@ -56,7 +54,6 @@ public class GamePlay : MonoBehaviour
     public Sprite countdown_2;
     public Sprite countdown_1;
     public Sprite countdown_Start;
-    //IEnumerator m_startCountdownCoroutine;
 
     // 캐릭터 사망
     bool isDead;
@@ -136,12 +133,10 @@ public class GamePlay : MonoBehaviour
         // 호스트명 가져오기
         string hostname = Dns.GetHostName();
         // 호스트명에서 IP주소를 가져옴
-        //IPAddress[] adrList = Dns.GetHostAddresses(hostname);
         IPHostEntry host = Dns.GetHostEntry(hostname);
         //m_serverAddress = adrList[0].ToString();
         m_serverAddress = host.AddressList.FirstOrDefault(a => a.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork).ToString();
 
-        //actionSelect = m_actionSelect.GetComponent<ActionSelect>();
     }
 
     // Update is called once per frame
@@ -340,9 +335,6 @@ public class GamePlay : MonoBehaviour
         m_isSendAction = false;
         m_isReceiveAction = false;
         short send_validDamage = 0;
-        //enemyPos = m_opponentPlayer.transform.position.x; // 상대방 플레이어의 위치를 가져옴
-
-        //ActionSelect actionSelect = m_actionSelect.GetComponent<ActionSelect>();
 
         // 상대방의 액션 수신부터 함
         if (m_isReceiveAction == false)
@@ -434,11 +426,9 @@ public class GamePlay : MonoBehaviour
                 m_inputData[m_playerId ^ 1].attackInfo.damageValue = 0;
                 m_inputData[m_playerId ^ 1].attackInfo.validDamage = 0;
                 m_isReceiveAction = true; // 수신 성공으로 침
-                //Debug.Log("FAIL");
+
 
             }
-            //if(m_inputData[m_playerId ^ 1].attackInfo.playerState !=State.None)
-            //Debug.Log(m_inputData[m_playerId ^ 1].attackInfo.playerState);
         }
 
 
@@ -496,23 +486,7 @@ public class GamePlay : MonoBehaviour
             Debug.Log("Opponent Action:" + m_inputData[m_playerId ^ 1].attackInfo.actionKind.ToString() +
                       ",  Damage:" + m_inputData[m_playerId ^ 1].attackInfo.damageValue);
         }
-
-
-        /*
-        Debug.Log("Own Action:" + m_inputData[m_playerId].attackInfo.actionKind.ToString() +
-          ",  Damage:" + m_inputData[m_playerId].attackInfo.damageValue);
-        Debug.Log("Opponent Action:" + m_inputData[m_playerId ^ 1].attackInfo.actionKind.ToString() +
-          ",  Damage:" + m_inputData[m_playerId ^ 1].attackInfo.damageValue);
-        */
     }
-
-    // 상대방의 공격/회피 통신 대기
-    /*
-    void UpdateWaitAction()
-    {
-        // 수신대기
-    }
-    */
 
 
     // 게임 종료 체크
@@ -522,12 +496,6 @@ public class GamePlay : MonoBehaviour
     }
 
 
-    // 게임 결과 표시
-    // 이건 코루틴으로?
-    void UpdateResult()
-    {
-
-    }
 
     IEnumerator DisPlayResult()
     {
@@ -567,27 +535,6 @@ public class GamePlay : MonoBehaviour
     // 게임 종료 시 화면
     void OnGUIEndGame()
     {
-        // 종료 버튼 표시
-        //GameObject obj = GameObject.Find("FinalResult");
-        //if (obj == null) { return; }
-
-        /*
-        Rect r = new Rect(Screen.width / 2 - 50, Screen.height - 60, 100, 50);
-        if (GUI.Button(r, "Retry"))
-        {
-            // 씬 변환 코드 아래에 추가
-            SceneManager.LoadScene(0);
-
-            // 현재 LoadScene만으로는 재시작을 완벽하게 구현할 수 없다.
-            // 이렇게 테스트해보니, 상대방이 아직 접속하지 않았는데 상대방 플레이어 오브젝트가 생기기도 하고,
-            // 네트워크에서 싱크로가 맞지 않고 차이나게 된다.
-            // (LoadScene을 하면 데이터가 모두 날아가는 것은 맞다.)
-            // 아마 Awake()를 사용하든가,
-            // 생성한 오브젝트를 Destroy하는 코드를 추가한 후 LoadScene을 마지막에 해야 할 것 같다. Initiate의 문제일 수 있다는 듯.
-            // 다른 스크립트에서 Start()를 사용하는지도 찾아보자.
-        }
-        
-        */
      
         
         if (retryButton == null)
@@ -636,34 +583,6 @@ public class GamePlay : MonoBehaviour
     // 연결 끊김 알림
     void NotifyDisconnection()
     {
-        /*
-        GUISkin skin = GUI.skin;
-        GUIStyle style = new GUIStyle(GUI.skin.GetStyle("button"));
-        style.normaColor = Color.white;
-        style.fontSize = 25;
-
-        float sx = 450;
-        float sy = 200;
-        float px = Screen.width / 2 - sx * 0.5f;
-        float py = Screen.height / 2 - sy * 0.5f;
-
-        string message = "연결이 끊어졌습니다.";
-
-        if (m_playerId == 0)
-        {
-            m_networkController.CloseServer();
-        }
-
-        if (GUI.Button(new Rect(px, py, sx, sy), message, style))
-        {
-            // 게임 종료
-            m_isGameOver = true;
-            // 씬 변환하는 코드 아래에 추가
-            SceneManager.LoadScene(0);
-        }
-        */
-        
-     
         m_networkController.CloseServer();
         if(connectionLostButton == null)
         {

@@ -70,8 +70,6 @@ public class NetworkController
         data[0] = (byte)actionKind;
         data[1] = (byte)state;
 
-        // 정수화
-        //short actTime = (short)(actionTime * 1000.0f);
         // 네트워크 바이트오더로 변환
         short netOrder1 = IPAddress.HostToNetworkOrder(damageValue);
         short netOrder2 = IPAddress.HostToNetworkOrder(validDamage);
@@ -110,8 +108,6 @@ public class NetworkController
         // 호스트 바이트오더로 변환
         short hostOrder1 = IPAddress.NetworkToHostOrder(netOrder1);
         short hostOrder2 = IPAddress.NetworkToHostOrder(netOrder2);
-        // float 단위 시간으로 되돌림
-        //actionTime = hostOrder / 1000.0f;
         damageValue = hostOrder1;
         validDamage = hostOrder2;
 
