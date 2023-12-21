@@ -8,7 +8,6 @@ using System.Linq;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
-
 public class GamePlay : MonoBehaviour
 {
     public GameObject m_serverPlayerPrefab; // 서버 측 플레이어 캐릭터
@@ -70,8 +69,13 @@ public class GamePlay : MonoBehaviour
 
     // Retry 버튼 프리팹
     public Button m_retryButtonPrefab;
+    public Button retryButton;
     public Button m_connectionLostButtonPrefab;
-
+    public Button connectionLostButton;
+    public Button m_returnButtonPrefab;
+    public Button returnButton;
+    public Button m_exitButtonPrefab;
+    public Button exitButton;
 
     // 게임 진행 상황
     enum GameState
@@ -85,7 +89,6 @@ public class GamePlay : MonoBehaviour
         EndGame, // 끝
         Disconnect, // 오류 (연결 안 됨)
     }
-
 
     // Start is called before the first frame update (Initialize용)
     void Start()
@@ -207,6 +210,9 @@ public class GamePlay : MonoBehaviour
             case GameState.Disconnect:
                 NotifyDisconnection();
                 break;
+            case GameState.Ready:
+                OnGUIReady();
+                break;
         }
 
         float px = Screen.width * 0.5f - 100.0f;
@@ -265,6 +271,7 @@ public class GamePlay : MonoBehaviour
         // 접속 확인
         if (m_networkController.IsConnected() == false)
         {
+
             return; // 접속 상태 아니면 종료
         }
 
@@ -289,6 +296,10 @@ public class GamePlay : MonoBehaviour
     // 게임 시작 전 카운트다운 띄우는 코루틴
     private IEnumerator CountdownCoroutine()
     {
+        if (returnButton == null)
+        {
+            OnGUIReady();
+        }
         Image presentCount = countdownObject.GetComponent<Image>();
         yield return new WaitForSecondsRealtime(1f);
         Time.timeScale = 0f; // 플레이어 멈춤
@@ -305,15 +316,20 @@ public class GamePlay : MonoBehaviour
         presentCount.sprite = countdown_1;
         //m_countdownText.text = "1";
         yield return new WaitForSecondsRealtime(1.5f);
-
+        if (returnButton != null)
+        {
+            returnButton.enabled = false;
+            Debug.Log("START NO RETURN");
+            Destroy(returnButton.gameObject);
+        }
         presentCount.sprite = countdown_Start;
         //m_countdownText.text = "Start!";
         Time.timeScale = 1f; // 플레이어 움직임 시작
-        m_gameState = GameState.Action; // 얘 위치를 마지막으로 빼야 하는지?
         yield return new WaitForSecondsRealtime(1.5f);
 
         presentCount.enabled = false;
         //m_countdownText.text = "";
+        m_gameState = GameState.Action;
     }
 
 
@@ -539,7 +555,14 @@ public class GamePlay : MonoBehaviour
     {
         OnGUIEndGame();
     }
-
+    void OnGUIReady()
+    {
+        if (returnButton == null)
+        {
+            returnButton = Instantiate(m_returnButtonPrefab, GameObject.Find("Canvas").transform);
+            returnButton.onClick.AddListener(CancelGame);
+        }
+    }
 
     // 게임 종료 시 화면
     void OnGUIEndGame()
@@ -565,13 +588,32 @@ public class GamePlay : MonoBehaviour
         }
         
         */
-        Button button = Instantiate(m_retryButtonPrefab, GameObject.Find("Canvas").transform);
-        button.onClick.AddListener(retryClick);
+     
         
-    }
+        if (retryButton == null)
+        {
+            retryButton = Instantiate(m_retryButtonPrefab, GameObject.Find("Canvas").transform);
+            retryButton.onClick.AddListener(retryClick);
+        }
+        if (exitButton == null)
+        {
+            exitButton = Instantiate(m_exitButtonPrefab, GameObject.Find("Canvas").transform);
+            Vector3 origin = exitButton.GetComponent<RectTransform>().position;
+            origin.y -= 100;
+            exitButton.GetComponent<RectTransform>().position = new Vector3(origin.x,origin.y,origin.z);
 
+            exitButton.onClick.AddListener(Application.Quit);
+        }
+        m_networkController.CloseServer();
+    }
+    void CancelGame()
+    {
+        m_networkController.CloseServer();
+        SceneManager.LoadScene(0);
+    }
     void retryClick()
     {
+        
         m_isGameOver = true;
         SceneManager.LoadScene(0);
     }
@@ -621,13 +663,17 @@ public class GamePlay : MonoBehaviour
         }
         */
         
-        if (m_playerId == 0)
+     
+        m_networkController.CloseServer();
+        if(connectionLostButton == null)
         {
-            m_networkController.CloseServer();
+            connectionLostButton = Instantiate(m_connectionLostButtonPrefab, GameObject.Find("Canvas").transform);
+            connectionLostButton.onClick.AddListener(retryClick);
         }
-
-        Button button = Instantiate(m_connectionLostButtonPrefab, GameObject.Find("Canvas").transform);
-        button.onClick.AddListener(retryClick);
-        
+        if(exitButton == null)
+        {
+            exitButton = Instantiate(m_exitButtonPrefab, GameObject.Find("Canvas").transform);
+            exitButton.onClick.AddListener(Application.Quit);
+        }
     }
 }

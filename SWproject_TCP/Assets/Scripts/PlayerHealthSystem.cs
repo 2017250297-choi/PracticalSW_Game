@@ -8,13 +8,11 @@ public class PlayerHealthSystem : MonoBehaviour
 	public static PlayerHealthSystem Instance;
 
 	public Image currentHealthBar;
-	public Image currentHealthGlobe;
 	public Text healthText;
-	public float hitPoint = 100f; // 최대 체력
+	public float hitPoint = 100f; // ???? ????
 	public float maxHitPoint = 100f;
 
 	public Image currentManaBar;
-	public Image currentManaGlobe;
 	public Text manaText;
 	public float manaPoint = 100f;
 	public float maxManaPoint = 100f;
@@ -23,9 +21,9 @@ public class PlayerHealthSystem : MonoBehaviour
 	// Regenerate Health & Mana
 	//==============================================================
 	public bool Regenerate = true;
-	public float regen = 0.1f;
+	public float regen = 0.005f;
 	private float timeleft = 0.0f;  // Left time for current interval
-	public float regenUpdateInterval = 1f;
+	public float regenUpdateInterval = 0.01f;
 
 	public bool GodMode;
 
@@ -44,6 +42,8 @@ public class PlayerHealthSystem : MonoBehaviour
 	{
 		UpdateGraphics();
 		timeleft = regenUpdateInterval;
+		regen = 0.05f;
+		regenUpdateInterval = 0.01f;
 	}
 
 	//==============================================================
@@ -72,8 +72,8 @@ public class PlayerHealthSystem : MonoBehaviour
 			}
 			else
 			{
-				HealDamage(regen);
-				RestoreMana(regen);
+				HealDamage(regen/5);
+				RestoreMana(regen*1.55f*2);
 			}
 
 			UpdateGraphics();
@@ -92,12 +92,7 @@ public class PlayerHealthSystem : MonoBehaviour
 		healthText.text = hitPoint.ToString("0") + "/" + maxHitPoint.ToString("0");
 	}
 
-	private void UpdateHealthGlobe()
-	{
-		float ratio = hitPoint / maxHitPoint;
-		currentHealthGlobe.rectTransform.localPosition = new Vector3(0, currentHealthGlobe.rectTransform.rect.height * ratio - currentHealthGlobe.rectTransform.rect.height, 0);
-		healthText.text = hitPoint.ToString("0") + "/" + maxHitPoint.ToString("0");
-	}
+	
 
 	public bool TakeDamage(float Damage)
 	{
@@ -130,7 +125,6 @@ public class PlayerHealthSystem : MonoBehaviour
 
 		UpdateGraphics();
 	}
-
 	//==============================================================
 	// Mana Logic
 	//==============================================================
@@ -141,12 +135,14 @@ public class PlayerHealthSystem : MonoBehaviour
 		manaText.text = manaPoint.ToString("0") + "/" + maxManaPoint.ToString("0");
 	}
 
-	private void UpdateManaGlobe()
-	{
-		float ratio = manaPoint / maxManaPoint;
-		currentManaGlobe.rectTransform.localPosition = new Vector3(0, currentManaGlobe.rectTransform.rect.height * ratio - currentManaGlobe.rectTransform.rect.height, 0);
-		manaText.text = manaPoint.ToString("0") + "/" + maxManaPoint.ToString("0");
-	}
+
+	public bool isEnoughMana(float q)
+    {
+		if (q > manaPoint)
+			return false;
+		else
+			return true;
+    }
 
 	public void UseMana(float Mana)
 	{
@@ -173,14 +169,12 @@ public class PlayerHealthSystem : MonoBehaviour
 	}
 
 	//==============================================================
-	// Update all Bars & Globes UI graphics
+	// Update all Bars  UI graphics
 	//==============================================================
 	private void UpdateGraphics()
 	{
 		UpdateHealthBar();
-		UpdateHealthGlobe();
 		UpdateManaBar();
-		UpdateManaGlobe();
 	}
 
 	//==============================================================
