@@ -72,7 +72,7 @@ public class PlayerHealthSystem : MonoBehaviour
 			}
 			else
 			{
-				HealDamage(regen/5);
+				HealDamage(regen/40);
 				RestoreMana(regen*1.55f*2);
 			}
 
@@ -184,7 +184,6 @@ public class PlayerHealthSystem : MonoBehaviour
 	{
 		// Player gets hurt. Do stuff.. play anim, sound..
 
-		//PopupText.Instance.Popup("Ouch!", 1f, 1f); // Demo stuff!
 
 		if (hitPoint < 1) // Health is Zero!!
 		{
@@ -200,8 +199,6 @@ public class PlayerHealthSystem : MonoBehaviour
 	//==============================================================
 	IEnumerator PlayerDied()
 	{
-		// Player is dead. Do stuff.. play anim, sound..
-		//PopupText.Instance.Popup("You have died!", 1f, 1f); // Demo stuff!
 
 		yield return null;
 	}
